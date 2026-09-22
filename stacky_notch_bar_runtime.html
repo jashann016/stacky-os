@@ -841,38 +841,6 @@ window.ThinkingEngine = {
     }
     window.setSpeed = setSpeed;
 
-    // 4-ANIMATION SHOWCASE ENGINE
-    const TASK_KEYS = ["listening", "searching", "working", "explaining"];
-    let showcaseTimer = null;
-
-    // Manually jump to next animation
-    window.cycleNextAnimation = function() {
-      const currentIndex = TASK_KEYS.indexOf(activeTask);
-      const nextIndex = (currentIndex + 1) % TASK_KEYS.length;
-      const nextKey = TASK_KEYS[nextIndex];
-      setTask(nextKey, TASKS[nextKey].engineName);
-      console.log("[Stacky Showcase]: Switched to " + TASKS[nextKey].engineName);
-    };
-
-    // Sequentially showcase all 4 engines
-    window.runAnimationShowcase = function() {
-      if (showcaseTimer) clearInterval(showcaseTimer);
-      let step = 0;
-      setTask(TASK_KEYS[0], "1/4 " + TASKS[TASK_KEYS[0]].engineName);
-
-      showcaseTimer = setInterval(() => {
-        step++;
-        if (step >= TASK_KEYS.length) {
-          clearInterval(showcaseTimer);
-          showcaseTimer = null;
-          setTask("listening", "Listening...");
-          return;
-        }
-        const key = TASK_KEYS[step];
-        setTask(key, (step + 1) + "/4 " + TASKS[key].engineName);
-      }, 3000);
-    };
-
     // Toggle / Show / Hide & Zero-CPU Lifecycle Control
     let isAwake = false;
     let animFrameId = null;
@@ -1117,17 +1085,6 @@ window.ThinkingEngine = {
             try { recognition.stop(); } catch(e){}
           }
         }
-      });
-    }
-
-    // Clicking the 3D Orb cycles through all 4 animations
-    const pureOrbBox = document.querySelector(".pure-orb-box");
-    if (pureOrbBox) {
-      pureOrbBox.style.cursor = "pointer";
-      pureOrbBox.title = "Click to cycle 4 animations";
-      pureOrbBox.addEventListener("click", (e) => {
-        e.stopPropagation();
-        window.cycleNextAnimation();
       });
     }
   </script>
