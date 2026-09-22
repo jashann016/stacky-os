@@ -23,6 +23,9 @@ def ensure_compiled():
             str(SRC_M),
             "-framework", "Cocoa",
             "-framework", "WebKit",
+            "-framework", "AVFoundation",
+            "-framework", "Speech",
+            "-Wl,-sectcreate,__TEXT,__info_plist," + str(BASE_DIR / "macos" / "Info.plist"),
             "-o", str(BINARY)
         ]
         res = subprocess.run(cmd, cwd=str(BASE_DIR))

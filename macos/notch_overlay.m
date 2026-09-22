@@ -1,6 +1,8 @@
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
 #import <Carbon/Carbon.h>
+#import <AVFoundation/AVFoundation.h>
+#import <Speech/Speech.h>
 
 @interface FloatingNotchPanel : NSPanel
 @end
@@ -10,7 +12,7 @@
 - (BOOL)canBecomeMainWindow { return YES; }
 @end
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, WKScriptMessageHandler>
 @property (strong) FloatingNotchPanel *panel;
 @property (strong) WKWebView *webView;
 @property (assign) BOOL isVisible;
@@ -22,15 +24,29 @@
 @property (strong) id globalKeyMonitor;
 @property (strong) id localKeyMonitor;
 
+// Native Audio & Speech Recognition Engine
+@property (strong) AVAudioEngine *audioEngine;
+@property (strong) SFSpeechRecognizer *speechRecognizer;
+@property (strong) SFSpeechAudioBufferRecognitionRequest *recognitionRequest;
+@property (strong) SFSpeechRecognitionTask *recognitionTask;
+@property (strong) NSTimer *speechSilenceTimer;
+@property (assign) BOOL isAudioCapturing;
+@property (strong) AVSpeechSynthesizer *speechSynth;
+
 - (void)showAndWake;
 - (void)hideAndSleep;
 - (void)toggle;
+- (void)startAudioCapture;
+- (void)stopAudioCapture;
+- (void)sendSpokenCommandToStacky:(NSString *)spokenText;
 @end
 
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+
+    self.speechSynth = [[AVSpeechSynthesizer alloc] init];
 
     NSScreen *screen = [NSScreen mainScreen];
     if (!screen) {
@@ -76,6 +92,10 @@
                                       NSWindowCollectionBehaviorIgnoresCycle];
 
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+    WKUserContentController *userContent = [[WKUserContentController alloc] init];
+    [userContent addScriptMessageHandler:self name:@"stackyMic"];
+    config.userContentController = userContent;
+
     self.webView = [[WKWebView alloc] initWithFrame:NSMakeRect(0, 0, width, height) configuration:config];
     [self.webView setValue:@NO forKey:@"drawsBackground"];
     [self.webView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
@@ -107,10 +127,7 @@
     }
 
     if (startVisible) {
-        [self.panel orderFrontRegardless];
-        self.isVisible = YES;
-        NSString *jsWake = [NSString stringWithFormat:@"document.documentElement.style.setProperty('--notch-offset', '%.1fpx'); if(window.wakeNotch) window.wakeNotch();", self.topOffset];
-        [self.webView evaluateJavaScript:jsWake completionHandler:nil];
+        [self showAndWake];
         printf("[+] Stacky Native Notch Bar launched in ACTIVE mode.\n");
     } else {
         [self.panel orderOut:nil];
@@ -171,6 +188,20 @@
     });
 }
 
+#pragma mark - WebKit Script Message Handler (Capsule Clicks)
+- (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
+    if ([message.name isEqualToString:@"stackyMic"]) {
+        if (self.isAudioCapturing) {
+            [self stopAudioCapture];
+            [self.webView evaluateJavaScript:@"setTask('listening', 'Mic Paused');" completionHandler:nil];
+        } else {
+            [self startAudioCapture];
+            [self.webView evaluateJavaScript:@"setTask('listening', 'Listening...');" completionHandler:nil];
+        }
+    }
+}
+
+#pragma mark - Keyboard Event Handlers
 - (void)handleFlagsEvent:(NSEvent *)event {
     NSEventModifierFlags flags = event.modifierFlags;
     BOOL isCtrlDown = (flags & NSEventModifierFlagControl) != 0;
@@ -224,22 +255,32 @@
     }
 }
 
+#pragma mark - Window Visibility Lifecycle
 - (void)showAndWake {
     if (self.isVisible) return;
     self.isVisible = YES;
     [self.panel orderFrontRegardless];
     [self.panel makeKeyWindow];
     [NSApp activateIgnoringOtherApps:YES];
+
     NSString *jsWake = [NSString stringWithFormat:@"document.documentElement.style.setProperty('--notch-offset', '%.1fpx'); if(window.wakeNotch){ window.wakeNotch(); }", self.topOffset];
     [self.webView evaluateJavaScript:jsWake completionHandler:nil];
-    printf("[+] [WAKE] Notch Bar summoned -> Voice mic listening, liquid orb running at 60 FPS.\n");
+    printf("[+] [WAKE] Notch Bar summoned -> Displaying below notch, arming mic.\n");
     fflush(stdout);
+
+    // Turn ON the native microphone and speech recognizer (triggers orange indicator)
+    [self startAudioCapture];
 }
 
 - (void)hideAndSleep {
     if (!self.isVisible) return;
     self.isVisible = NO;
+
+    // Immediately stop microphone & cut audio stream
+    [self stopAudioCapture];
+
     [self.webView evaluateJavaScript:@"if(window.sleepNotch){ window.sleepNotch(); }" completionHandler:nil];
+
     // Allow smooth CSS slide-up transition into the notch before ordering panel out
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         if (!self.isVisible) {
@@ -256,6 +297,193 @@
     } else {
         [self showAndWake];
     }
+}
+
+#pragma mark - Native Microphone & Speech Recognition Engine
+- (void)startAudioCapture {
+    if (self.isAudioCapturing) return;
+
+    AVAuthorizationStatus audioStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
+    if (audioStatus == AVAuthorizationStatusNotDetermined) {
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio completionHandler:^(BOOL granted) {
+            if (granted) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self startAudioCapture];
+                });
+            } else {
+                NSLog(@"[!] Microphone access denied by user.");
+            }
+        }];
+        return;
+    } else if (audioStatus != AVAuthorizationStatusAuthorized) {
+        NSLog(@"[!] Microphone not authorized (status=%ld). Enable in System Settings -> Privacy & Security -> Microphone.", (long)audioStatus);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.webView evaluateJavaScript:@"setTask('listening', 'Mic Access Needed');" completionHandler:nil];
+        });
+        return;
+    }
+
+    if (!self.speechRecognizer) {
+        self.speechRecognizer = [[SFSpeechRecognizer alloc] initWithLocale:[NSLocale localeWithLocaleIdentifier:@"en-US"]];
+    }
+
+    [SFSpeechRecognizer requestAuthorization:^(SFSpeechRecognizerAuthorizationStatus authStatus) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self beginRecordingSession];
+        });
+    }];
+}
+
+- (void)beginRecordingSession {
+    if (self.isAudioCapturing) return;
+
+    NSError *error = nil;
+
+    if (self.recognitionTask) {
+        [self.recognitionTask cancel];
+        self.recognitionTask = nil;
+    }
+
+    self.audioEngine = [[AVAudioEngine alloc] init];
+    self.recognitionRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
+    self.recognitionRequest.shouldReportPartialResults = YES;
+
+    AVAudioInputNode *inputNode = self.audioEngine.inputNode;
+    AVAudioFormat *recordingFormat = [inputNode outputFormatForBus:0];
+
+    __weak typeof(self) weakSelf = self;
+    [inputNode installTapOnBus:0 bufferSize:1024 format:recordingFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
+        [weakSelf.recognitionRequest appendAudioPCMBuffer:buffer];
+    }];
+
+    [self.audioEngine prepare];
+    if (![self.audioEngine startAndReturnError:&error]) {
+        NSLog(@"AudioEngine start error: %@", error);
+        return;
+    }
+
+    self.isAudioCapturing = YES;
+    printf("[+] [MIC] Microphone is LIVE (Apple AudioEngine started, orange dot active).\n");
+    fflush(stdout);
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.webView evaluateJavaScript:@"setTask('listening', 'Listening to voice...');" completionHandler:nil];
+    });
+
+    self.recognitionTask = [self.speechRecognizer recognitionTaskWithRequest:self.recognitionRequest resultHandler:^(SFSpeechRecognitionResult * _Nullable result, NSError * _Nullable error) {
+        if (result) {
+            NSString *transcript = result.bestTranscription.formattedString;
+            printf("[Voice Detected]: %s (final=%d)\n", [transcript UTF8String], result.isFinal);
+            fflush(stdout);
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSString *escaped = [[transcript stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"] stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+                NSString *js = [NSString stringWithFormat:@"if(window.onVoiceRecognized){ window.onVoiceRecognized('%@', %d); }", escaped, result.isFinal];
+                [weakSelf.webView evaluateJavaScript:js completionHandler:nil];
+
+                // If speech pauses or completes, trigger Stacky thinking
+                [weakSelf scheduleSpeechTimeoutForTranscript:transcript isFinal:result.isFinal];
+            });
+        }
+        if (error) {
+            // Task completed or ended
+        }
+    }];
+}
+
+- (void)stopAudioCapture {
+    if (!self.isAudioCapturing) return;
+    self.isAudioCapturing = NO;
+
+    [self.speechSilenceTimer invalidate];
+    self.speechSilenceTimer = nil;
+
+    if (self.audioEngine) {
+        if (self.audioEngine.isRunning) {
+            [self.audioEngine stop];
+            [self.audioEngine.inputNode removeTapOnBus:0];
+        }
+        self.audioEngine = nil;
+    }
+
+    if (self.recognitionRequest) {
+        [self.recognitionRequest endAudio];
+        self.recognitionRequest = nil;
+    }
+
+    if (self.recognitionTask) {
+        [self.recognitionTask cancel];
+        self.recognitionTask = nil;
+    }
+
+    printf("[+] [MIC] Microphone DISARMED & closed (orange dot OFF).\n");
+    fflush(stdout);
+}
+
+- (void)scheduleSpeechTimeoutForTranscript:(NSString *)transcript isFinal:(BOOL)isFinal {
+    [self.speechSilenceTimer invalidate];
+    if (isFinal) {
+        [self sendSpokenCommandToStacky:transcript];
+        return;
+    }
+    if (transcript.length > 0) {
+        __weak typeof(self) weakSelf = self;
+        self.speechSilenceTimer = [NSTimer scheduledTimerWithTimeInterval:1.6 repeats:NO block:^(NSTimer * _Nonnull timer) {
+            [weakSelf sendSpokenCommandToStacky:transcript];
+        }];
+    }
+}
+
+- (void)sendSpokenCommandToStacky:(NSString *)spokenText {
+    if (spokenText.length == 0) return;
+    printf("[+] Dispatching voice query to Stacky Cloud: %s\n", [spokenText UTF8String]);
+    fflush(stdout);
+
+    // Update UI to working mode
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.webView evaluateJavaScript:@"setTask('working', 'Thinking...');" completionHandler:nil];
+    });
+
+    // Send HTTP POST to Render Cloud Backend
+    NSURL *url = [NSURL URLWithString:@"https://stacky-os.onrender.com/api/chat"];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    req.HTTPMethod = @"POST";
+    [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [req setValue:@"923352" forHTTPHeaderField:@"X-Stacky-Key"];
+
+    NSDictionary *body = @{@"message": spokenText};
+    req.HTTPBody = [NSJSONSerialization dataWithJSONObject:body options:0 error:nil];
+
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if (data) {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            NSString *reply = json[@"response"] ?: @"System online, sir.";
+            NSString *shortReply = reply;
+            if (shortReply.length > 30) {
+                shortReply = [[shortReply substringToIndex:27] stringByAppendingString:@"..."];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSString *escaped = [[shortReply stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"] stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+                NSString *js = [NSString stringWithFormat:@"setTask('explaining', '%@');", escaped];
+                [self.webView evaluateJavaScript:js completionHandler:nil];
+
+                // Speak reply using modern AVFoundation speech synthesizer
+                [self.speechSynth stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+                AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:reply];
+                utterance.voice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
+                utterance.rate = AVSpeechUtteranceDefaultSpeechRate;
+                [self.speechSynth speakUtterance:utterance];
+
+                // Return to listening state after speaking
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    if (self.isVisible) {
+                        [self.webView evaluateJavaScript:@"setTask('listening', 'Listening...');" completionHandler:nil];
+                    }
+                });
+            });
+        }
+    }];
+    [task resume];
 }
 
 @end

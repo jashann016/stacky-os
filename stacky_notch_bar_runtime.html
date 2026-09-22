@@ -1061,11 +1061,24 @@ window.ThinkingEngine = {
       };
     }
 
-    // Clicking the capsule toggles active voice listening
+    // Native macOS Voice Ear callback (invoked by Cocoa AVAudioEngine + SpeechRecognizer)
+    window.onVoiceRecognized = function(transcript, isFinal) {
+      if (transcript && transcript.trim().length > 0) {
+        let display = transcript;
+        if (display.length > 22) {
+          display = "..." + display.slice(-19);
+        }
+        setStatus('"' + display + '"');
+      }
+    };
+
+    // Clicking the capsule toggles native macOS voice listening
     if (barCapsule) {
       barCapsule.style.cursor = "pointer";
       barCapsule.addEventListener("click", () => {
-        if (recognition) {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.stackyMic) {
+          window.webkit.messageHandlers.stackyMic.postMessage("toggle");
+        } else if (recognition) {
           if (!isListening) {
             try { recognition.start(); } catch(e){}
           } else {

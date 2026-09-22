@@ -6,9 +6,12 @@ BINARY="$DIR/bin/stacky_notch_bar"
 PLIST_DIR="$HOME/Library/LaunchAgents"
 PLIST_FILE="$PLIST_DIR/com.stacky.notchbar.plist"
 
-if [ ! -f "$BINARY" ]; then
-    echo "[+] Compiling binary first..."
-    clang -O2 -fobjc-arc "$DIR/macos/notch_overlay.m" -framework Cocoa -framework WebKit -o "$BINARY"
+if [ ! -f "$BINARY" ] || [ "$DIR/macos/notch_overlay.m" -nt "$BINARY" ]; then
+    echo "[+] Compiling binary with native Speech & AVFoundation..."
+    clang -O2 -fobjc-arc "$DIR/macos/notch_overlay.m" \
+        -framework Cocoa -framework WebKit -framework AVFoundation -framework Speech \
+        -Wl,-sectcreate,__TEXT,__info_plist,"$DIR/macos/Info.plist" \
+        -o "$BINARY"
 fi
 
 mkdir -p "$PLIST_DIR"

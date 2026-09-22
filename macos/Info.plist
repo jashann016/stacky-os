@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.stacky.notchbar</string>
+    <key>CFBundleName</key>
+    <string>Stacky AI</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Stacky AI requires microphone access to listen to your voice commands from the notch bar.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Stacky AI requires speech recognition to transcribe your voice commands.</string>
+</dict>
+</plist>
