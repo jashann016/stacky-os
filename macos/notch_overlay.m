@@ -14,6 +14,7 @@
 @property (strong) FloatingNotchPanel *panel;
 @property (strong) WKWebView *webView;
 @property (assign) BOOL isVisible;
+@property (assign) CGFloat topOffset;
 @property (assign) NSTimeInterval lastCtrlPressTime;
 @property (assign) BOOL wasCtrlDown;
 @property (strong) id globalFlagsMonitor;
@@ -38,10 +39,24 @@
     }
 
     NSRect screenFrame = screen.frame;
-    CGFloat width = 260.0;
-    CGFloat height = 72.0;
+
+    // Detect exact hardware notch height (typically 32.0 pt on MacBook displays)
+    CGFloat notchHeight = 32.0;
+    if (@available(macOS 12.0, *)) {
+        if (screen.safeAreaInsets.top > 0) {
+            notchHeight = screen.safeAreaInsets.top;
+        }
+    }
+
+    CGFloat gapBelowNotch = 6.0;
+    CGFloat topOffset = notchHeight + gapBelowNotch; // 38.0 pt
+    CGFloat width = 280.0;
+    CGFloat capsuleHeight = 56.0;
+    CGFloat shadowMargin = 26.0;
+    CGFloat height = topOffset + capsuleHeight + shadowMargin; // 120.0 pt
+
     CGFloat xPos = screenFrame.origin.x + (screenFrame.size.width - width) / 2.0;
-    CGFloat yPos = screenFrame.origin.y + screenFrame.size.height - height + 4.0; // Anchored directly beneath MacBook hardware notch
+    CGFloat yPos = screenFrame.origin.y + screenFrame.size.height - height; // Top of window aligns with top of screen
 
     NSRect contentRect = NSMakeRect(xPos, yPos, width, height);
 
@@ -76,6 +91,10 @@
     }
 
     [self.panel setContentView:self.webView];
+    self.topOffset = topOffset;
+
+    NSString *jsSetOffset = [NSString stringWithFormat:@"document.documentElement.style.setProperty('--notch-offset', '%.1fpx');", topOffset];
+    [self.webView evaluateJavaScript:jsSetOffset completionHandler:nil];
 
     // Determine initial visibility from CLI arguments
     BOOL startVisible = NO;
@@ -90,7 +109,8 @@
     if (startVisible) {
         [self.panel orderFrontRegardless];
         self.isVisible = YES;
-        [self.webView evaluateJavaScript:@"if(window.wakeNotch) window.wakeNotch();" completionHandler:nil];
+        NSString *jsWake = [NSString stringWithFormat:@"document.documentElement.style.setProperty('--notch-offset', '%.1fpx'); if(window.wakeNotch) window.wakeNotch();", self.topOffset];
+        [self.webView evaluateJavaScript:jsWake completionHandler:nil];
         printf("[+] Stacky Native Notch Bar launched in ACTIVE mode.\n");
     } else {
         [self.panel orderOut:nil];
@@ -210,7 +230,8 @@
     [self.panel orderFrontRegardless];
     [self.panel makeKeyWindow];
     [NSApp activateIgnoringOtherApps:YES];
-    [self.webView evaluateJavaScript:@"if(window.wakeNotch){ window.wakeNotch(); }" completionHandler:nil];
+    NSString *jsWake = [NSString stringWithFormat:@"document.documentElement.style.setProperty('--notch-offset', '%.1fpx'); if(window.wakeNotch){ window.wakeNotch(); }", self.topOffset];
+    [self.webView evaluateJavaScript:jsWake completionHandler:nil];
     printf("[+] [WAKE] Notch Bar summoned -> Voice mic listening, liquid orb running at 60 FPS.\n");
     fflush(stdout);
 }
