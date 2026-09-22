@@ -923,16 +923,18 @@ window.ThinkingEngine = {
     // AUTO-RECONNECTING WEBSOCKET PRESENCE CLIENT
     // ========================================================
     let socket = null;
+    const CLOUD_WS_URL = "wss://stacky-os.onrender.com/ws?token=923352";
+    const LOCAL_WS_URL = "ws://127.0.0.1:8000/ws";
+
     function connectBackendSocket() {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const host = window.location.host || "127.0.0.1:8000";
-      const url = `${protocol}//${host}/ws`;
+      // Connect directly to 24/7 Render Cloud backend
+      const url = CLOUD_WS_URL;
 
       try {
         socket = new WebSocket(url);
 
         socket.onopen = () => {
-          console.log("[Stacky Notch] Connected to AI Backend via WebSocket.");
+          console.log("[Stacky Notch] Connected to 24/7 Render Cloud Backend.");
         };
 
         socket.onmessage = (event) => {
@@ -989,10 +991,13 @@ window.ThinkingEngine = {
             message: transcript
           }));
         } else {
-          // Fallback fetch
-          fetch("http://127.0.0.1:8000/api/chat", {
+          // Fallback fetch to Render Cloud
+          fetch("https://stacky-os.onrender.com/api/chat", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "X-Stacky-Key": "923352"
+            },
             body: JSON.stringify({ message: transcript })
           }).then(r => r.json()).then(() => {
             setTimeout(() => setTask("listening"), 3000);
