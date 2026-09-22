@@ -132,7 +132,7 @@
 </head>
 <body>
 
-  <div class="bar-anchor" id="barAnchor">
+  <div class="bar-anchor hidden" id="barAnchor">
     <div class="bar-capsule" id="barCapsule">
       <div class="pure-orb-box">
         <canvas id="pureOrbCanvas" class="pure-orb-canvas"></canvas>
@@ -840,21 +840,61 @@ window.ThinkingEngine = {
     }
     window.setSpeed = setSpeed;
 
-    // Toggle / Show / Hide Notch Bar
-    window.toggleBar = function() {
-      if (barAnchor) barAnchor.classList.toggle("hidden");
-    };
-    window.show = function() {
+    // Toggle / Show / Hide & Zero-CPU Lifecycle Control
+    let isAwake = false;
+    let animFrameId = null;
+
+    window.wakeNotch = function() {
+      isAwake = true;
       if (barAnchor) barAnchor.classList.remove("hidden");
-    };
-    window.hide = function() {
-      if (barAnchor) barAnchor.classList.add("hidden");
+      setTask("listening", "Listening...");
+
+      // Start 60fps render loop if not running
+      if (!animFrameId) {
+        lastTime = performance.now();
+        animFrameId = requestAnimationFrame(renderLoop);
+      }
+
+      // Start native speech recognition
+      if (recognition && !isListening) {
+        try { recognition.start(); } catch (e) {}
+      }
+      console.log("[Stacky Runtime] Notch awake: mic active, 60fps visualizer running.");
     };
 
+    window.sleepNotch = function() {
+      isAwake = false;
+      if (barAnchor) barAnchor.classList.add("hidden");
+
+      // Halt canvas render loop completely -> ZERO CPU!
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+
+      // Cut microphone stream -> ZERO mic / audio processing!
+      if (recognition && isListening) {
+        try { recognition.stop(); } catch (e) {}
+        isListening = false;
+      }
+      console.log("[Stacky Runtime] Notch sleeping: 0.0% CPU, mic dormant.");
+    };
+
+    window.toggleBar = function() {
+      if (isAwake) {
+        window.sleepNotch();
+      } else {
+        window.wakeNotch();
+      }
+    };
+    window.show = window.wakeNotch;
+    window.hide = window.sleepNotch;
+
+    // Local Escape key listener inside the WebKit runtime
     window.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
+      if (e.key === "Escape" || e.code === "Escape") {
         e.preventDefault();
-        window.toggleBar();
+        window.sleepNotch();
       }
     });
 
@@ -891,12 +931,16 @@ window.ThinkingEngine = {
       }
     }
 
-    // 60 FPS Continuous Loop with Uniform Smooth Velocity
+    // 60 FPS Continuous Loop with Zero-CPU Dormancy Gate
     let lastTime = performance.now();
     let accumulatedTime = 0;
 
     function renderLoop(now) {
-      requestAnimationFrame(renderLoop);
+      if (!isAwake) {
+        animFrameId = null;
+        return; // Halt render loop when sleeping!
+      }
+      animFrameId = requestAnimationFrame(renderLoop);
 
       const dt = (now - lastTime) / 1000;
       lastTime = now;
@@ -914,9 +958,8 @@ window.ThinkingEngine = {
       const rgb = hexToRgb(SIGNATURE_COLOR);
       paintParticlesTinted(ctx, frame, rgb);
     }
-    requestAnimationFrame(renderLoop);
 
-    // Initialize Default Task
+    // Initialize Default Task (starts dormant, no requestAnimationFrame call)
     setTask("listening");
 
     // ========================================================

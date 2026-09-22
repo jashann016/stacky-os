@@ -7,14 +7,20 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 BINARY = BASE_DIR / "bin" / "stacky_notch_bar"
-SWIFT_SRC = BASE_DIR / "macos" / "notch_overlay.m"
+SRC_M = BASE_DIR / "macos" / "notch_overlay.m"
 
 def ensure_compiled():
+    needs_compile = False
     if not BINARY.exists():
+        needs_compile = True
+    elif SRC_M.exists() and SRC_M.stat().st_mtime > BINARY.stat().st_mtime:
+        needs_compile = True
+
+    if needs_compile:
         print("[+] Compiling native macOS Notch Bar binary...")
         cmd = [
-            "clang", "-O2",
-            str(SWIFT_SRC),
+            "clang", "-O2", "-fobjc-arc",
+            str(SRC_M),
             "-framework", "Cocoa",
             "-framework", "WebKit",
             "-o", str(BINARY)
@@ -27,16 +33,25 @@ def ensure_compiled():
 
 def main():
     ensure_compiled()
-    print("=======================================================")
-    print("       STACKY AI // NATIVE MACOS NOTCH OVERLAY         ")
-    print("=======================================================")
-    print(f"[+] Launching native overlay from: {BINARY}")
-    print("[+] Positioned right under MacBook Camera Notch.")
-    print("[+] Type 'toggle' to hide/show, or 'exit' to quit.")
-    print("-------------------------------------------------------")
+    print("=================================================================")
+    print("           STACKY AI // SOVEREIGN MACOS NOTCH OVERLAY            ")
+    print("=================================================================")
+    print(f"[+] Native Engine Binary: {BINARY}")
+    print("[+] Hardware Anchor     : Built-in MacBook Display Notch")
+    print("-----------------------------------------------------------------")
+    print(" 🚀 ACTIVATION SHORTCUT : Double-tap [Control]  (Ctrl + Ctrl)")
+    print(" 💤 DISMISS SHORTCUT    : Press [Esc]  or  single-tap [Control]")
+    print(" ⚡ ZERO BACKGROUND DRAW: 0.0% CPU & 0 mic usage when dismissed")
+    print("-----------------------------------------------------------------")
+    print("[+] Terminal commands: 'wake', 'sleep', 'toggle', or 'exit'")
+    print("=================================================================")
+
+    binary_args = [str(BINARY)]
+    if "--show" in sys.argv:
+        binary_args.append("--show")
 
     proc = subprocess.Popen(
-        [str(BINARY)],
+        binary_args,
         cwd=str(BASE_DIR),
         stdin=subprocess.PIPE,
         text=True
