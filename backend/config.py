@@ -22,6 +22,9 @@ DEFAULT_MODEL = os.getenv("STACKY_MODEL", "openai/gpt-oss-120b")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_ALLOWED_USER_ID = os.getenv("TELEGRAM_ALLOWED_USER_ID", "")
 
+# Security & Sovereign Master Authorization Key
+STACKY_MASTER_KEY = os.getenv("STACKY_MASTER_KEY", "stacky-os-master-key-2026")
+
 # Assistant Persona
 ASSISTANT_NAME = "Stacky"
 CREATOR_NAME = "Sir"

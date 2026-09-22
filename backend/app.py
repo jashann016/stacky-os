@@ -14,10 +14,12 @@ from backend.tools.os_control import get_system_diagnostics
 from backend.voice.tts import synthesize_speech
 from backend.comms.hub import CommunicationsHub
 
+from backend.config import STACKY_MASTER_KEY
+
 logger = logging.getLogger("StackyApp")
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI(title="Stacky AI - Jarvis Engine")
+app = FastAPI(title="Stacky-OS // Autonomous Sovereign Engine")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,6 +28,51 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Public routes accessible without Master Key (webhooks & health probes)
+PUBLIC_ROUTES = {
+    "/",
+    "/api/health",
+    "/api/auth/verify",
+    "/api/telegram/webhook",
+    "/api/twilio/voice",
+    "/api/twilio/gather",
+    "/docs",
+    "/openapi.json"
+}
+
+@app.middleware("http")
+async def sovereign_auth_gate(request: Request, call_next):
+    """Enforces Sovereign Master Key authentication for all remote cloud requests."""
+    client_ip = request.client.host if request.client else "unknown"
+    path = request.url.path
+
+    # Always permit local loopback requests, public webhooks, and static files
+    if (
+        client_ip in ["127.0.0.1", "localhost", "::1"]
+        or path in PUBLIC_ROUTES
+        or path.startswith("/static")
+        or request.method == "OPTIONS"
+        or not STACKY_MASTER_KEY
+    ):
+        return await call_next(request)
+
+    # Remote cloud access requires Master Key validation
+    auth_header = request.headers.get("X-Stacky-Key") or request.headers.get("Authorization", "")
+    token = request.query_params.get("key") or request.query_params.get("token")
+
+    if (
+        auth_header == STACKY_MASTER_KEY 
+        or f"Bearer {STACKY_MASTER_KEY}" in auth_header 
+        or token == STACKY_MASTER_KEY
+    ):
+        return await call_next(request)
+
+    return Response(
+        content=json.dumps({"detail": "Access Denied: Sovereign Master Authorization Key required to command Stacky."}),
+        status_code=401,
+        media_type="application/json"
+    )
 
 agent = StackyAgent()
 comms_hub = CommunicationsHub()
@@ -95,9 +142,22 @@ class PresenceStateRequest(BaseModel):
     task: str
     status_text: Optional[str] = None
 
+class AuthVerifyRequest(BaseModel):
+    key: str
+
 # ==========================================================
 # API ENDPOINTS
 # ==========================================================
+@app.post("/api/auth/verify")
+async def verify_master_key(req: AuthVerifyRequest):
+    """Verify Master Key for web dashboard login."""
+    if req.key == STACKY_MASTER_KEY:
+        return {"status": "authorized", "message": "Master Key verified, Sir."}
+    return Response(
+        content=json.dumps({"detail": "Invalid Master Key."}),
+        status_code=401,
+        media_type="application/json"
+    )
 @app.get("/api/health")
 async def health():
     return {
