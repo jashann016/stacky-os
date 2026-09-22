@@ -457,19 +457,22 @@
     NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (data) {
             NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-            NSString *reply = json[@"response"] ?: @"System online, sir.";
-            NSString *shortReply = reply;
-            if (shortReply.length > 30) {
-                shortReply = [[shortReply substringToIndex:27] stringByAppendingString:@"..."];
+            NSString *reply = json[@"reply"] ?: json[@"response"] ?: @"System online, sir.";
+            NSString *spokenText = json[@"spoken_summary"] ?: reply;
+            BOOL isSplit = [json[@"is_split_mode"] boolValue];
+
+            NSString *displayStatus = isSplit ? @"Sent briefing to Telegram" : reply;
+            if (displayStatus.length > 28) {
+                displayStatus = [[displayStatus substringToIndex:25] stringByAppendingString:@"..."];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
-                NSString *escaped = [[shortReply stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"] stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+                NSString *escaped = [[displayStatus stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"] stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
                 NSString *js = [NSString stringWithFormat:@"setTask('explaining', '%@');", escaped];
                 [self.webView evaluateJavaScript:js completionHandler:nil];
 
                 // Speak reply using modern AVFoundation speech synthesizer
                 [self.speechSynth stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
-                AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:reply];
+                AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:spokenText];
                 utterance.voice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
                 utterance.rate = AVSpeechUtteranceDefaultSpeechRate;
                 [self.speechSynth speakUtterance:utterance];

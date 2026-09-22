@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import base64
 import logging
@@ -173,6 +174,30 @@ async def update_presence_state(req: PresenceStateRequest):
     await manager.set_presence(req.task, req.status_text)
     return {"status": "ok", "task": req.task, "status_text": manager.current_status}
 
+def make_spoken_summary(full_text: str, query: str) -> str:
+    """Condenses long explanations into 1-2 punchy spoken sentences for Mac voice output."""
+    text = re.sub(r'```[\s\S]*?```', '', full_text)
+    lines = [line.strip() for line in text.split('\n')]
+    valid_sentences = []
+    for line in lines:
+        if not line or line.startswith(('#', '-', '*', '>', '|')):
+            continue
+        clean_line = re.sub(r'\*\*|\*|`|\[.*?\]\(.*?\)', '', line)
+        for s in re.split(r'(?<=[.!?])\s+', clean_line):
+            s = s.strip()
+            if len(s) > 15:
+                valid_sentences.append(s)
+
+    summary = ""
+    for s in valid_sentences:
+        if len(summary) + len(s) < 220:
+            summary = (summary + " " + s).strip()
+        else:
+            break
+    if not summary:
+        summary = "Here is the briefing you requested, Sir."
+    return summary
+
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
     user_msg = req.message.lower()
@@ -184,13 +209,36 @@ async def chat_endpoint(req: ChatRequest):
         await manager.set_presence("working", "Processing & computing...")
 
     result = await agent.chat(req.message)
+    full_reply = result["reply"]
+
+    # Automatic Split Mode: Quick answers spoken on Mac; Long/Research answers summarized on Mac + full notes to Telegram
+    word_count = len(full_reply.split())
+    is_long_answer = word_count > 45 or "\n\n" in full_reply or "```" in full_reply or any(k in user_msg for k in ["telegram", "notes", "briefing", "detail"])
+
+    spoken_summary = full_reply
+    telegram_dispatched = False
+
+    if is_long_answer:
+        core_summary = make_spoken_summary(full_reply, req.message)
+        spoken_summary = f"{core_summary} I have sent the full detailed briefing to your Telegram."
+
+        # Automatically dispatch full detailed research note to Telegram
+        tg_text = f"📋 *Stacky Intelligence Briefing*\n*Query:* {req.message}\n\n{full_reply}"
+        try:
+            from backend.comms.telegram_bridge import telegram_bridge
+            tg_res = telegram_bridge.send_text_message(tg_text)
+            telegram_dispatched = tg_res.get("status") in ["SUCCESS", "SIMULATED_SUCCESS"]
+        except Exception as e:
+            logger.warning(f"Auto-dispatch to Telegram failed: {e}")
 
     # Deliver response in explaining mode
     await manager.set_presence("explaining", "Explaining solution...")
     
-    # Return to listening after short delay
     res_data = {
-        "reply": result["reply"],
+        "reply": full_reply,
+        "spoken_summary": spoken_summary,
+        "is_split_mode": is_long_answer,
+        "telegram_dispatched": telegram_dispatched,
         "tools_used": result.get("tools_used", []),
         "diagnostics": get_system_diagnostics()
     }

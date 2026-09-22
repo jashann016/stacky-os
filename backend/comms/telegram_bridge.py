@@ -197,7 +197,17 @@ class TelegramRemoteBridge:
             with urllib.request.urlopen(req, timeout=5) as response:
                 return {"status": "SUCCESS", "code": response.status}
         except Exception as e:
-            return {"status": "ERROR", "error": str(e)}
+            # Fallback to plain text without parse_mode in case Markdown contains unmatched characters
+            try:
+                fallback_data = urllib.parse.urlencode({
+                    "chat_id": self.allowed_user_id,
+                    "text": message
+                }).encode("utf-8")
+                req2 = urllib.request.Request(url, data=fallback_data)
+                with urllib.request.urlopen(req2, timeout=5) as response:
+                    return {"status": "SUCCESS", "code": response.status}
+            except Exception as e2:
+                return {"status": "ERROR", "error": str(e2)}
 
     def handle_remote_command(self, user_command: str) -> str:
         """Process remote commands sent from your phone in college."""
