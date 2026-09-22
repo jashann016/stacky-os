@@ -180,6 +180,10 @@
                     [weakSelf hideAndSleep];
                 } else if ([input isEqualToString:@"show"] || [input isEqualToString:@"wake"]) {
                     [weakSelf showAndWake];
+                } else if ([input isEqualToString:@"demo"] || [input isEqualToString:@"showcase"]) {
+                    [weakSelf.webView evaluateJavaScript:@"if(window.runAnimationShowcase) window.runAnimationShowcase();" completionHandler:nil];
+                } else if ([input isEqualToString:@"cycle"] || [input isEqualToString:@"next"]) {
+                    [weakSelf.webView evaluateJavaScript:@"if(window.cycleNextAnimation) window.cycleNextAnimation();" completionHandler:nil];
                 } else if ([input isEqualToString:@"exit"] || [input isEqualToString:@"quit"]) {
                     [NSApp terminate:nil];
                 }
@@ -438,6 +442,43 @@
     if (spokenText.length == 0) return;
     printf("[+] Dispatching voice query to Stacky Cloud: %s\n", [spokenText UTF8String]);
     fflush(stdout);
+
+    NSString *lower = spokenText.lowercaseString;
+
+    // 1. Direct Voice Trigger: 4-Animation Showcase
+    if ([lower containsString:@"animation"] || [lower containsString:@"demo"] || [lower containsString:@"show all"]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.webView evaluateJavaScript:@"if(window.runAnimationShowcase) window.runAnimationShowcase();" completionHandler:nil];
+            [self.speechSynth stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+            AVSpeechUtterance *u = [AVSpeechUtterance speechUtteranceWithString:@"Showcasing all four thinking engines now, sir: Acoustic Wave, Quantum Cube, DNA Helix, and Concentric Ring."];
+            u.voice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
+            [self.speechSynth speakUtterance:u];
+        });
+        return;
+    }
+
+    // 2. Direct Voice Trigger: Send Telegram Message to Jashan
+    if ([lower containsString:@"telegram"] || [lower containsString:@"message me"] || [lower containsString:@"text me"]) {
+        NSURL *tgUrl = [NSURL URLWithString:@"https://api.telegram.org/bot8628400649:AAHOWPcVF5FfXsNhInVSXPzSsiQ9TGZR82M/sendMessage"];
+        NSMutableURLRequest *tgReq = [NSMutableURLRequest requestWithURL:tgUrl];
+        tgReq.HTTPMethod = @"POST";
+        [tgReq setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        NSDictionary *tgBody = @{
+            @"chat_id": @"5714321696",
+            @"text": @"hello jashan i am stacky , how can i help you ."
+        };
+        tgReq.HTTPBody = [NSJSONSerialization dataWithJSONObject:tgBody options:0 error:nil];
+        [[[NSURLSession sharedSession] dataTaskWithRequest:tgReq] resume];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.webView evaluateJavaScript:@"setTask('explaining', 'Sent to Telegram');" completionHandler:nil];
+            [self.speechSynth stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+            AVSpeechUtterance *u = [AVSpeechUtterance speechUtteranceWithString:@"Dispatched the message to your Telegram, Jashan."];
+            u.voice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
+            [self.speechSynth speakUtterance:u];
+        });
+        return;
+    }
 
     // Update UI to working mode
     dispatch_async(dispatch_get_main_queue(), ^{
