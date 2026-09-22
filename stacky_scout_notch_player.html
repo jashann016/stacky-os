@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Scout Notch Capsule Live Animation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #03050c;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 50px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    p {
+      color: #889bb2;
+      font-size: 13px;
+    }
+
+    /* TABS TO TEST STATES */
+    .state-tabs {
+      display: flex;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      margin-bottom: 22px;
+      z-index: 20;
+    }
+    .btn-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-tab:hover { color: #fff; }
+    .btn-tab.active {
+      background: rgba(0, 242, 254, 0.2);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: #00f2fe;
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.25);
+    }
+    .tab-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    /* SCREEN FRAME */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 560px;
+      border-radius: 22px;
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Menu Bar */
+    .menu-bar {
+      height: 32px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      position: relative;
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* HARDWARE NOTCH (Always stationary at top) */
+    .hardware-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #282828;
+    }
+
+    /* ======================================================== */
+    /* THE SCOUT NOTCH CAPSULE (INTEGRATING YOUR COLORED GLOBE) */
+    /* ======================================================== */
+    .scout-notch-capsule {
+      position: absolute;
+      top: 0px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100%);
+      width: 380px;
+      height: 52px;
+      background: rgba(10, 14, 24, 0.92);
+      backdrop-filter: blur(40px) saturate(1.8);
+      border-radius: 26px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.85),
+        0 0 35px rgba(0, 242, 254, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px 0 10px;
+      opacity: 0;
+      cursor: pointer;
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    /* SLIDE DOWN FROM NOTCH (ACTIVE STATE) */
+    .screen-frame.active .scout-notch-capsule {
+      opacity: 1;
+      transform: translateX(-50%) translateY(36px); /* Drops smoothly below camera notch */
+    }
+
+    /* LEFT: MINI FLUID BREATHING GLOBE */
+    .capsule-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .globe-holder {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .globe-aura {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.6) 0%, rgba(121, 40, 202, 0.45) 50%, transparent 80%);
+      filter: blur(8px);
+      z-index: 1;
+      animation: auraBreath 3s infinite ease-in-out alternate;
+    }
+
+    .globe-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      position: relative;
+      z-index: 3;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+      animation: fluidBreath 3s infinite ease-in-out alternate;
+    }
+
+    @keyframes fluidBreath {
+      0% { transform: scale(0.96) rotate(-2deg); }
+      50% { transform: scale(1.06) rotate(2deg); filter: saturate(1.4); }
+      100% { transform: scale(0.98) rotate(0deg); }
+    }
+    @keyframes auraBreath {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.3); opacity: 0.95; }
+      100% { transform: scale(1); opacity: 0.7; }
+    }
+
+    /* CENTER: DYNAMIC STATUS & VOICE WAVE */
+    .capsule-center {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .status-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-sub {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    /* RIGHT: LIVE AUDIO FREQUENCY EQUALIZER */
+    .capsule-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 24px;
+      padding-left: 8px;
+    }
+    .eq-bar {
+      width: 3.5px;
+      height: 6px;
+      border-radius: 2px;
+      background: #00f2fe;
+      box-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+      transition: height 0.15s ease;
+    }
+
+    /* STATE SPECIFIC ANIMATIONS */
+    /* 1. LISTENING STATE */
+    .state-listening .status-title { color: #00f2fe; }
+    .state-listening .eq-bar:nth-child(1) { animation: waveListening 0.8s infinite ease-in-out alternate; }
+    .state-listening .eq-bar:nth-child(2) { animation: waveListening 0.8s infinite 0.15s ease-in-out alternate; }
+    .state-listening .eq-bar:nth-child(3) { animation: waveListening 0.8s infinite 0.3s ease-in-out alternate; }
+    .state-listening .eq-bar:nth-child(4) { animation: waveListening 0.8s infinite 0.45s ease-in-out alternate; }
+    .state-listening .eq-bar:nth-child(5) { animation: waveListening 0.8s infinite 0.2s ease-in-out alternate; }
+
+    @keyframes waveListening {
+      0% { height: 6px; }
+      100% { height: 26px; }
+    }
+
+    /* 2. THINKING / PROCESSING STATE */
+    .state-thinking .status-title { color: #a855f7; }
+    .state-thinking .eq-bar {
+      background: #a855f7;
+      box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+      animation: waveThinking 1.2s infinite ease-in-out alternate;
+    }
+    .state-thinking .eq-bar:nth-child(odd) { animation-delay: 0.3s; }
+    @keyframes waveThinking {
+      0% { height: 4px; opacity: 0.3; }
+      50% { height: 18px; opacity: 1; }
+      100% { height: 4px; opacity: 0.3; }
+    }
+
+    /* 3. SPEAKING / REPL YING STATE */
+    .state-speaking .status-title { color: #ff0844; }
+    .state-speaking .eq-bar {
+      background: #ff0844;
+      box-shadow: 0 0 8px rgba(255, 8, 68, 0.6);
+    }
+    .state-speaking .eq-bar:nth-child(1) { animation: waveSpeaking 0.5s infinite ease-in-out alternate; }
+    .state-speaking .eq-bar:nth-child(2) { animation: waveSpeaking 0.5s infinite 0.1s ease-in-out alternate; }
+    .state-speaking .eq-bar:nth-child(3) { animation: waveSpeaking 0.5s infinite 0.2s ease-in-out alternate; }
+    .state-speaking .eq-bar:nth-child(4) { animation: waveSpeaking 0.5s infinite 0.3s ease-in-out alternate; }
+    .state-speaking .eq-bar:nth-child(5) { animation: waveSpeaking 0.5s infinite 0.15s ease-in-out alternate; }
+
+    @keyframes waveSpeaking {
+      0% { height: 8px; }
+      100% { height: 30px; }
+    }
+
+    /* Mock desktop window */
+    .mock-window {
+      position: absolute;
+      top: 130px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      background: rgba(13, 18, 30, 0.65);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    .w-dots { display: flex; gap: 6px; }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-r { background: #ff5f56; }
+    .w-y { background: #ffbd2e; }
+    .w-g { background: #27c93f; }
+    .mock-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .m-line { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+
+    /* macOS Dock */
+    .mac-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 54px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(35px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-app {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    /* CONTROL DOCK */
+    .control-dock {
+      margin-top: 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+    .btn-toggle {
+      background: rgba(0, 242, 254, 0.2);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #00f2fe;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-toggle:hover {
+      background: rgba(0, 242, 254, 0.35);
+      transform: translateY(-2px);
+    }
+    .hint {
+      font-size: 12px;
+      color: #8fa0b5;
+    }
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Scout-Inspired Notch Architecture</div>
+    <h1>Stacky AI Scout Notch Capsule</h1>
+    <p>The camera notch drops down a frosted black glass pill embedding your fluid breathing globe & live soundwaves.</p>
+  </header>
+
+  <!-- STATE SELECTOR TABS -->
+  <div class="state-tabs">
+    <button class="btn-tab active" onclick="setState('listening', this)">
+      <span class="tab-dot" style="color: #00f2fe;"></span>
+      1. Listening State (Cyan Waves)
+    </button>
+    <button class="btn-tab" onclick="setState('thinking', this)">
+      <span class="tab-dot" style="color: #a855f7;"></span>
+      2. Thinking State (Violet Pulse)
+    </button>
+    <button class="btn-tab" onclick="setState('speaking', this)">
+      <span class="tab-dot" style="color: #ff0844;"></span>
+      3. Speaking State (Crimson Surge)
+    </button>
+  </div>
+
+  <!-- SCREEN FRAME -->
+  <div class="screen-frame active" id="screenFrame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 6:02 PM</span>
+      </div>
+    </div>
+
+    <!-- HARDWARE NOTCH -->
+    <div class="hardware-notch">
+      <div class="camera-lens"></div>
+    </div>
+
+    <!-- THE SCOUT-INSPIRED NOTCH CAPSULE -->
+    <div class="scout-notch-capsule state-listening" id="notchCapsule" onclick="toggleCapsule()" title="Click to dismiss / summon">
+      <!-- Left: Mini Fluid Breathing Globe -->
+      <div class="capsule-left">
+        <div class="globe-holder">
+          <div class="globe-aura"></div>
+          <img src="assets/stacky_globe_improved.png" alt="Stacky Core" class="globe-img" />
+        </div>
+      </div>
+
+      <!-- Center: Status Text -->
+      <div class="capsule-center">
+        <div class="status-title" id="statusTitle">Stacky Listening...</div>
+        <div class="status-sub" id="statusSub">"What's on your mind, Sir?"</div>
+      </div>
+
+      <!-- Right: Live Animated Soundwave Equalizer -->
+      <div class="capsule-right">
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+      </div>
+    </div>
+
+    <!-- Mock Window -->
+    <div class="mock-window">
+      <div class="w-dots">
+        <div class="w-dot w-r"></div>
+        <div class="w-dot w-y"></div>
+        <div class="w-dot w-g"></div>
+      </div>
+      <div class="mock-lines">
+        <div class="m-line" style="width: 45%;"></div>
+        <div class="m-line" style="width: 75%;"></div>
+        <div class="m-line" style="width: 60%;"></div>
+        <div class="m-line" style="width: 85%;"></div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="mac-dock">
+      <div class="dock-app">📁</div>
+      <div class="dock-app">🌐</div>
+      <div class="dock-app">✉️</div>
+      <div class="dock-app">💬</div>
+      <div class="dock-app">⚙️</div>
+    </div>
+  </div>
+
+  <!-- CONTROL DOCK -->
+  <div class="control-dock">
+    <button class="btn-toggle" onclick="toggleCapsule()">
+      <span id="btnText">Dismiss to Notch</span> (<kbd>Space</kbd>)
+    </button>
+    <div class="hint">Clean, rapid slide down from notch (450ms Apple ease-out). No lag, 100% responsive.</div>
+  </div>
+
+  <script>
+    const screen = document.getElementById('screenFrame');
+    const capsule = document.getElementById('notchCapsule');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusSub = document.getElementById('statusSub');
+    const btnText = document.getElementById('btnText');
+
+    let currentState = 'listening';
+
+    function toggleCapsule() {
+      screen.classList.toggle('active');
+      const isActive = screen.classList.contains('active');
+      btnText.textContent = isActive ? 'Dismiss to Notch' : 'Summon from Notch';
+    }
+
+    function setState(state, btn) {
+      currentState = state;
+      document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      capsule.className = `scout-notch-capsule state-${state}`;
+
+      if (state === 'listening') {
+        statusTitle.textContent = "Stacky Listening...";
+        statusSub.textContent = '"What\'s on your mind, Sir?"';
+      } else if (state === 'thinking') {
+        statusTitle.textContent = "Thinking & Reasoning...";
+        statusSub.textContent = 'Processing tools & communications';
+      } else if (state === 'speaking') {
+        statusTitle.textContent = "Stacky Speaking...";
+        statusSub.textContent = 'Neural TTS audio active';
+      }
+
+      // Ensure capsule is open when switching states
+      if (!screen.classList.contains('active')) {
+        toggleCapsule();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleCapsule();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Next-Gen Liquid Island Motion Lab</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #03050c;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 40px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* Top Controls & Explanation */
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    /* Motion Style Switcher */
+    .motion-tabs {
+      display: flex;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      margin-bottom: 20px;
+      z-index: 20;
+    }
+    .tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+    .tab.active {
+      background: rgba(0, 242, 254, 0.18);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: #00f2fe;
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.25);
+    }
+
+    /* MAC SCREEN SIMULATION */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 540px;
+      border-radius: 22px;
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+    }
+
+    /* SVG Filter for Organic Liquid Metaball Tear / Gooey stretch */
+    .svg-filters {
+      position: absolute;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    /* Top Menu Bar */
+    .menu-bar {
+      height: 30px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      position: relative;
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* ======================================================== */
+    /* DYNAMIC NOTCH ANCHOR & LIQUID GOO CONTAINER              */
+    /* ======================================================== */
+    .notch-wrapper {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Idle camera base */
+    .notch-base {
+      position: absolute;
+      top: 0;
+      width: 140px;
+      height: 26px;
+      background: #000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #151515;
+      border: 1px solid #282828;
+    }
+
+    /* THE LIQUID EXTENSION POD */
+    .liquid-island {
+      position: relative;
+      width: 140px;
+      height: 26px;
+      background: #000000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 100;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      transition: all 0.55s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    /* Spectral Refraction Edge (Prismatic Laser border) */
+    .laser-rim {
+      position: absolute;
+      inset: -1.5px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, #00f2fe, #7928ca, #ff0844, #00f2fe);
+      background-size: 300% 300%;
+      animation: laserSweep 4s linear infinite;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.4s ease;
+      filter: blur(1px);
+    }
+    @keyframes laserSweep {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .island-inner {
+      position: absolute;
+      inset: 0;
+      background: #000000;
+      border-radius: inherit;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Sonic Shockwave Ring emitting from notch upon emergence */
+    .shockwave {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid #00f2fe;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 10;
+    }
+
+    /* THE CORE GLOBE */
+    .globe-holder {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.2) translateY(-30px);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 5;
+    }
+
+    .globe-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.9)) saturate(1.2);
+      animation: fluidBreathe 3.2s infinite ease-in-out alternate;
+    }
+
+    .globe-aura {
+      position: absolute;
+      width: 115px;
+      height: 115px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.55) 0%, rgba(121, 40, 202, 0.42) 45%, rgba(255, 8, 68, 0.25) 75%, transparent 85%);
+      filter: blur(16px);
+      z-index: -1;
+      animation: auraPulse 3.2s infinite ease-in-out alternate;
+    }
+
+    @keyframes fluidBreathe {
+      0% { transform: scale(0.95) rotate(-2deg); filter: saturate(1.15); }
+      50% { transform: scale(1.06) rotate(2deg); filter: saturate(1.4) drop-shadow(0 0 25px rgba(255, 8, 68, 0.7)); }
+      100% { transform: scale(0.98) rotate(0deg); filter: saturate(1.25); }
+    }
+    @keyframes auraPulse {
+      0% { transform: scale(0.85); opacity: 0.55; }
+      50% { transform: scale(1.35); opacity: 0.95; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    /* ======================================================== */
+    /* ACTIVE EMERGENCE STYLES                                 */
+    /* ======================================================== */
+
+    /* STYLE 1: Organic Liquid Teardrop (Drops down like mercury) */
+    .style-teardrop.active {
+      width: 118px;
+      height: 118px;
+      top: 10px;
+      border-radius: 59px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 40px rgba(0, 242, 254, 0.3);
+      animation: teardropDrop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.35) forwards;
+    }
+    @keyframes teardropDrop {
+      0% { height: 26px; border-radius: 14px; }
+      40% { height: 135px; width: 105px; border-radius: 40px 40px 60px 60px; }
+      75% { height: 112px; width: 122px; border-radius: 59px; }
+      100% { height: 118px; width: 118px; border-radius: 59px; }
+    }
+
+    /* STYLE 2: Prismatic Laser Snap (Apple Pro high-precision warp) */
+    .style-snap.active {
+      width: 116px;
+      height: 116px;
+      top: 10px;
+      border-radius: 58px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.85), 0 0 50px rgba(121, 40, 202, 0.4);
+      animation: laserSnap 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes laserSnap {
+      0% { transform: scaleY(0.4); }
+      70% { transform: scaleY(1.08) scaleX(0.95); }
+      100% { transform: scaleY(1.0) scaleX(1.0); }
+    }
+
+    /* STYLE 3: Floating Detached Core (Notch stays, Globe drifts down freely) */
+    .style-detach.active {
+      width: 140px;
+      height: 26px;
+      background: transparent;
+      box-shadow: none;
+    }
+    .style-detach.active .globe-holder {
+      transform: scale(1) translateY(45px) !important;
+      opacity: 1 !important;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    }
+
+    /* Common active flags */
+    .liquid-island.active .laser-rim { opacity: 1; }
+    .liquid-island.active .globe-holder {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Shockwave animation */
+    .trigger-shockwave {
+      animation: shockwaveExpand 0.75s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+    }
+    @keyframes shockwaveExpand {
+      0% { width: 50px; height: 50px; opacity: 0.9; border-width: 3px; }
+      100% { width: 220px; height: 220px; opacity: 0; border-width: 1px; }
+    }
+
+    /* Bottom Info Card */
+    .info-dock {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+    .info-text { font-size: 13px; color: #00f2fe; }
+    .trigger-btn {
+      background: rgba(0, 242, 254, 0.2);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .trigger-btn:hover { background: rgba(0, 242, 254, 0.35); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Motion Architecture Lab</div>
+    <h1>Next-Gen Notch Island Emergence</h1>
+  </header>
+
+  <!-- MOTION STYLE SWITCHER TABS -->
+  <div class="motion-tabs">
+    <button class="tab active" onclick="setMotion('teardrop', this)">1. Organic Liquid Teardrop (Elastic Stretch)</button>
+    <button class="tab" onclick="setMotion('snap', this)">2. Prismatic Laser Snap (Fast & Snappy)</button>
+    <button class="tab" onclick="setMotion('detach', this)">3. Detached Floating Core (Drifts Out)</button>
+  </div>
+
+  <!-- SIMULATED DISPLAY -->
+  <div class="screen-frame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 12:22 PM</span>
+      </div>
+    </div>
+
+    <!-- DYNAMIC NOTCH ANCHOR -->
+    <div class="notch-wrapper">
+      <div class="notch-base">
+        <div class="camera-lens"></div>
+      </div>
+
+      <!-- THE MORPHING ISLAND -->
+      <div class="liquid-island style-teardrop active" id="islandEl" onclick="toggleIsland()">
+        <div class="laser-rim"></div>
+        <div class="shockwave" id="waveEl"></div>
+        <div class="island-inner">
+          <div class="globe-holder" id="globeEl">
+            <div class="globe-aura"></div>
+            <img src="assets/stacky_globe_improved.png" alt="Stacky Core Globe" class="globe-img" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TRIGGER CONTROLS -->
+  <div class="info-dock">
+    <div class="info-text" id="infoLabel">Active: Organic Liquid Teardrop — Notch stretches downward like liquid mercury before snapping into the sphere.</div>
+    <button class="trigger-btn" onclick="toggleIsland()">Toggle Emergence (<kbd>Space</kbd>)</button>
+  </div>
+
+  <script>
+    const island = document.getElementById('islandEl');
+    const wave = document.getElementById('waveEl');
+    const infoLabel = document.getElementById('infoLabel');
+    let currentStyle = 'teardrop';
+
+    const descriptions = {
+      teardrop: "1. Organic Liquid Teardrop — The notch pulls down elastically like mercury, absorbs tension, and blossoms smoothly into the circular globe.",
+      snap: "2. Prismatic Laser Snap — Ultra-snappy Apple Pro spring with rotating multi-color laser rim and an instant sonic shockwave pulse.",
+      detach: "3. Detached Floating Core — The camera notch stays fixed, while the glowing sphere fluidly floats out and hovers right below the bezel."
+    };
+
+    function setMotion(style, btn) {
+      currentStyle = style;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      island.className = `liquid-island style-${style} active`;
+      infoLabel.textContent = descriptions[style];
+      fireShockwave();
+    }
+
+    function fireShockwave() {
+      wave.classList.remove('trigger-shockwave');
+      void wave.offsetWidth;
+      wave.classList.add('trigger-shockwave');
+    }
+
+    function toggleIsland() {
+      island.classList.toggle('active');
+      if (island.classList.contains('active')) {
+        fireShockwave();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleIsland();
+      }
+    });
+  </script>
+</body>
+</html>

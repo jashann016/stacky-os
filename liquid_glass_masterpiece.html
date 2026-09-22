@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Liquid Glass Masterpiece</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020308;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 20px 40px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 16px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    p {
+      color: #889bb2;
+      font-size: 12px;
+    }
+
+    /* SCREEN FRAME */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 570px;
+      border-radius: 22px;
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Menu Bar */
+    .menu-bar {
+      height: 32px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      position: relative;
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* HARDWARE CAMERA NOTCH (STATIONARY BASE AT Z-INDEX: 100) */
+    .hardware-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #000000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #282828;
+    }
+
+    /* ======================================================== */
+    /* MASTERPIECE LIQUID GLASS BAR                             */
+    /* ======================================================== */
+    .liquid-bar-container {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      /* IDLE: Tucked completely behind the notch */
+      top: -55px;
+      width: 140px;
+      height: 48px;
+      z-index: 80;
+      opacity: 0;
+      cursor: pointer;
+
+      /* Organic Apple Spring Curves */
+      transition: 
+        top 0.58s cubic-bezier(0.175, 0.885, 0.32, 1.25),
+        width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.35s ease;
+    }
+
+    /* ACTIVE: Pops down right under the notch and expands */
+    .screen-frame.active .liquid-bar-container {
+      top: 36px;
+      width: 440px;
+      opacity: 1;
+    }
+
+    /* THE GLASS SHELL */
+    .glass-shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 24px;
+      overflow: hidden;
+
+      /* Optical Liquid Glass Stack */
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.16) 0%,
+        rgba(15, 23, 42, 0.6) 35%,
+        rgba(2, 6, 23, 0.72) 100%
+      );
+      backdrop-filter: blur(50px) saturate(2.2) contrast(1.15);
+      -webkit-backdrop-filter: blur(50px) saturate(2.2) contrast(1.15);
+
+      /* Multi-Layered Prismatic Laser Rim */
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 
+        0 25px 60px rgba(0, 0, 0, 0.8),
+        0 0 35px rgba(0, 242, 254, 0.2),
+        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.75), /* Top Specular Highlight */
+        inset 0 -1.5px 3px rgba(0, 242, 254, 0.25);   /* Bottom Chromatic Light */
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px 0 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    /* Live Interactive Hover Glow */
+    .liquid-bar-container:hover .glass-shell {
+      border-color: rgba(0, 242, 254, 0.6);
+      box-shadow: 
+        0 25px 60px rgba(0, 0, 0, 0.8),
+        0 0 45px rgba(0, 242, 254, 0.4),
+        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.85);
+    }
+
+    /* Prismatic Caustic Sweep across glass */
+    .glass-shell::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -150%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.18) 50%,
+        transparent 100%
+      );
+      transform: skewX(-25deg);
+      pointer-events: none;
+      animation: glassSweep 4.5s infinite ease-in-out;
+    }
+    @keyframes glassSweep {
+      0% { left: -150%; }
+      30% { left: 180%; }
+      100% { left: 180%; }
+    }
+
+    /* LEFT SECTION: Living Liquid Drop Indicator & Live Speech Transcript */
+    .bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 2;
+    }
+
+    .liquid-iris {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00f2fe, #ff0844);
+      box-shadow: 0 0 16px #00f2fe, 0 0 30px rgba(0, 242, 254, 0.6);
+      animation: irisBreathe 2s infinite ease-in-out alternate;
+    }
+    @keyframes irisBreathe {
+      0% { transform: scale(0.9); filter: hue-rotate(0deg); }
+      50% { transform: scale(1.22); filter: hue-rotate(45deg); box-shadow: 0 0 20px #ff0844; }
+      100% { transform: scale(0.95); filter: hue-rotate(0deg); }
+    }
+
+    .status-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .status-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .live-transcript {
+      font-size: 11px;
+      color: #00f2fe;
+      font-weight: 500;
+      max-width: 230px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* RIGHT SECTION: Canvas Fluid Sine Waves (Smoother than rigid bars) */
+    .bar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    canvas#sineWaveCanvas {
+      width: 100px;
+      height: 28px;
+    }
+
+    .mic-icon-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      transition: all 0.2s ease;
+    }
+    .mic-icon-btn:hover {
+      background: rgba(0, 242, 254, 0.25);
+      color: #00f2fe;
+    }
+
+    /* Mock window */
+    .mock-window {
+      position: absolute;
+      top: 130px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      background: rgba(13, 18, 30, 0.65);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    .w-dots { display: flex; gap: 6px; }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-r { background: #ff5f56; }
+    .w-y { background: #ffbd2e; }
+    .w-g { background: #27c93f; }
+    .mock-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .m-line { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+
+    /* macOS Dock */
+    .mac-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 54px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(35px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-app {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    /* CONTROL DOCK */
+    .control-dock {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+    .btn-toggle {
+      background: rgba(0, 242, 254, 0.2);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #00f2fe;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-toggle:hover {
+      background: rgba(0, 242, 254, 0.35);
+      transform: translateY(-2px);
+    }
+    .hint {
+      font-size: 12px;
+      color: #8fa0b5;
+    }
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Liquid Glass Masterpiece</div>
+    <h1>Refined Liquid Glass Under-Notch Bar</h1>
+    <p>Enhanced with multi-layer caustics, organic fluid sine waves, and live speech transcription feed.</p>
+  </header>
+
+  <!-- SCREEN FRAME -->
+  <div class="screen-frame active" id="screenFrame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 6:10 PM</span>
+      </div>
+    </div>
+
+    <!-- HARDWARE CAMERA NOTCH (STATIONARY ON TOP AT Z-INDEX: 100) -->
+    <div class="hardware-notch">
+      <div class="camera-lens"></div>
+    </div>
+
+    <!-- MASTERPIECE LIQUID GLASS BAR -->
+    <div class="liquid-bar-container" id="barContainer" onclick="toggleBar()" title="Click to toggle emergence">
+      <div class="glass-shell">
+        
+        <!-- Left: Living Iris Dot & Live Transcript -->
+        <div class="bar-left">
+          <div class="liquid-iris"></div>
+          <div class="status-stack">
+            <div class="status-badge">Stacky AI</div>
+            <div class="live-transcript" id="liveText">"Listening for your command..."</div>
+          </div>
+        </div>
+
+        <!-- Right: Real-time Fluid Sine Wave Canvas -->
+        <div class="bar-right">
+          <canvas id="sineWaveCanvas" width="200" height="56"></canvas>
+          <div class="mic-icon-btn">🎙</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mock Window (Notice how the wallpaper refracts through the glass shell) -->
+    <div class="mock-window">
+      <div class="w-dots">
+        <div class="w-dot w-r"></div>
+        <div class="w-dot w-y"></div>
+        <div class="w-dot w-g"></div>
+      </div>
+      <div class="mock-lines">
+        <div class="m-line" style="width: 45%;"></div>
+        <div class="m-line" style="width: 75%;"></div>
+        <div class="m-line" style="width: 60%;"></div>
+        <div class="m-line" style="width: 85%;"></div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="mac-dock">
+      <div class="dock-app">📁</div>
+      <div class="dock-app">🌐</div>
+      <div class="dock-app">✉️</div>
+      <div class="dock-app">💬</div>
+      <div class="dock-app">⚙️</div>
+    </div>
+  </div>
+
+  <!-- CONTROL DOCK -->
+  <div class="control-dock">
+    <button class="btn-toggle" onclick="toggleBar()">
+      <span id="btnText">Retract Under Notch</span> (<kbd>Space</kbd>)
+    </button>
+    <div class="hint">Watch the fluid sine waves undulate and hover over the bar to see the active liquid glass glow.</div>
+  </div>
+
+  <script>
+    const screen = document.getElementById('screenFrame');
+    const btnText = document.getElementById('btnText');
+    const liveText = document.getElementById('liveText');
+
+    // Canvas fluid sine wave renderer
+    const canvas = document.getElementById('sineWaveCanvas');
+    const ctx = canvas.getContext('2d');
+    let waveTime = 0;
+
+    const demoSentences = [
+      '"Listening for your command..."',
+      '"Checking unread WhatsApp messages..."',
+      '"Organizing Desktop and Downloads..."',
+      '"Summarizing project updates, Sir..."',
+      '"All systems optimal and armed."'
+    ];
+    let sentenceIdx = 0;
+
+    setInterval(() => {
+      sentenceIdx = (sentenceIdx + 1) % demoSentences.length;
+      liveText.textContent = demoSentences[sentenceIdx];
+    }, 3200);
+
+    function drawSineWave() {
+      waveTime += 0.05;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const cy = h / 2;
+
+      // Draw 3 harmonic fluid wave layers
+      const colors = [
+        'rgba(0, 242, 254, 0.9)',
+        'rgba(168, 85, 247, 0.75)',
+        'rgba(255, 8, 68, 0.6)'
+      ];
+
+      for (let layer = 0; layer < 3; layer++) {
+        ctx.beginPath();
+        const freq = 0.035 + layer * 0.01;
+        const amp = 10 - layer * 2.5;
+        const speed = waveTime * (1.2 + layer * 0.4);
+
+        for (let x = 0; x <= w; x += 4) {
+          const y = cy + Math.sin(x * freq + speed) * amp * Math.sin(x / w * Math.PI);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+
+        ctx.strokeStyle = colors[layer];
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = colors[layer];
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      requestAnimationFrame(drawSineWave);
+    }
+
+    function toggleBar() {
+      screen.classList.toggle('active');
+      const isActive = screen.classList.contains('active');
+      btnText.textContent = isActive ? 'Retract Under Notch' : 'Emerge From Under Notch';
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleBar();
+      }
+    });
+
+    drawSineWave();
+  </script>
+</body>
+</html>

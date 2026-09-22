@@ -1,0 +1,44 @@
+{
+  "name": "Jashanpreet Singh",
+  "call_sign": "Sir",
+  "timezone": "Asia/Kolkata",
+  "occupation": "Tech Founder / Developer",
+  "vibe": "Calm, ambitious, hyper-focused, respectful",
+  "daily_rhythm": {
+    "morning_briefing": "08:30",
+    "deep_work_hours": "10:00 - 14:00",
+    "evening_wrapup": "20:00"
+  },
+  "priority_contacts": [
+    {
+      "name": "Aman Sharma",
+      "relation": "Close Friend / Gym Partner",
+      "platform": "WhatsApp",
+      "phone": "+1 (555) 392-1829",
+      "vip": true
+    },
+    {
+      "name": "David Miller",
+      "relation": "Business Partner (TechCorp)",
+      "platform": "Email",
+      "email": "david.miller@techcorp.io",
+      "vip": true
+    }
+  ],
+  "preferences": {
+    "auto_reply_routine": true,
+    "hold_financial_actions": true,
+    "preferred_voice": "en-GB-RyanNeural (British Jarvis)",
+    "presence_style": "Floating Dynamic Pill (Top Notch)"
+  },
+  "ui_presence": {
+    "selected_style": "fluid_breathing",
+    "asset": "assets/stacky_globe_improved.png",
+    "template": "stacky_fluid_orb.html",
+    "saved_package": "saved_design/"
+  },
+  "evolved_learnings": [
+    "I prefer clean Python without excessive type hints",
+    "I like to submit my college assignments in PDF format"
+  ]
+}

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinking Orbs — Live Interactive Showcase</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #03050c;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 60px 20px;
+      user-select: none;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    p {
+      color: #889bb2;
+      font-size: 14px;
+      max-width: 600px;
+    }
+
+    /* MAIN STAGE */
+    .stage-card {
+      position: relative;
+      width: 440px;
+      height: 380px;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 25px 60px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(0, 242, 254, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 25px;
+      overflow: hidden;
+    }
+
+    canvas#orbCanvas {
+      width: 240px;
+      height: 240px;
+      cursor: pointer;
+    }
+
+    .state-meta {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .state-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+      text-transform: capitalize;
+    }
+    .state-desc {
+      font-size: 12px;
+      color: #00f2fe;
+    }
+
+    /* CONTROLS GRID */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 680px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .btn-state {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    .btn-state:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .btn-state.active {
+      background: rgba(0, 242, 254, 0.18);
+      border-color: rgba(0, 242, 254, 0.55);
+      color: #00f2fe;
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.25);
+    }
+
+    /* DETAILS BANNER */
+    .info-card {
+      max-width: 680px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px 20px;
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .info-card strong { color: #fff; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Open Source AI UI Discovery</div>
+    <h1>Jakub Antalík's "Thinking Orbs"</h1>
+    <p>A specialized library of mathematical dotted particle orbs replacing loading spinners for AI agents.</p>
+  </header>
+
+  <!-- LIVE ANIMATION STAGE -->
+  <div class="stage-card">
+    <canvas id="orbCanvas" width="480" height="480"></canvas>
+    <div class="state-meta">
+      <div class="state-name" id="stateTitle">State: Working</div>
+      <div class="state-desc" id="stateDesc">Swirling harmonic circular point cloud</div>
+    </div>
+  </div>
+
+  <!-- STATE SWITCHER BUTTONS -->
+  <div class="controls-grid">
+    <button class="btn-state active" onclick="setOrbState('working', this)">
+      <span>1. Working</span>
+    </button>
+    <button class="btn-state" onclick="setOrbState('searching', this)">
+      <span>2. Searching</span>
+    </button>
+    <button class="btn-state" onclick="setOrbState('listening', this)">
+      <span>3. Listening</span>
+    </button>
+    <button class="btn-state" onclick="setOrbState('solving', this)">
+      <span>4. Solving</span>
+    </button>
+    <button class="btn-state" onclick="setOrbState('weaving', this)">
+      <span>5. Weaving</span>
+    </button>
+    <button class="btn-state" onclick="setOrbState('breathing', this)">
+      <span>6. Breathing</span>
+    </button>
+    <button class="btn-state" onclick="setOrbState('composing', this)">
+      <span>7. Composing</span>
+    </button>
+    <button class="btn-state" onclick="setOrbState('shaping', this)">
+      <span>8. Shaping</span>
+    </button>
+  </div>
+
+  <!-- DETAILS BANNER -->
+  <div class="info-card">
+    <strong>📦 Library:</strong> <code>thinking-orbs</code> (by Jakub Antalík / libraries.dev)<br/>
+    <strong>⚡ Architecture:</strong> Pure 2D Canvas math. No WebGL, zero GPU-heavy SVG filters, 60fps lightweight.<br/>
+    <strong>🎯 Purpose:</strong> Each state represents a specific mental stage of an AI agent (e.g. searching the web vs. thinking vs. listening to your microphone).
+  </div>
+
+  <script>
+    const canvas = document.getElementById('orbCanvas');
+    const ctx = canvas.getContext('2d');
+    const stateTitle = document.getElementById('stateTitle');
+    const stateDesc = document.getElementById('stateDesc');
+
+    let currentState = 'working';
+    let time = 0;
+
+    // Generate dotted grid particles
+    const NUM_POINTS = 160;
+    const points = [];
+
+    for (let i = 0; i < NUM_POINTS; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = Math.cbrt(Math.random()) * 90; // sphere distribution
+      
+      points.push({
+        baseX: r * Math.sin(phi) * Math.cos(theta),
+        baseY: r * Math.sin(phi) * Math.sin(theta),
+        baseZ: r * Math.cos(phi),
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 1.5,
+        size: 1.6 + Math.random() * 1.8
+      });
+    }
+
+    const stateMeta = {
+      working: { desc: "Harmonic spherical particle rotation indicating active execution" },
+      searching: { desc: "Expanded particle cloud pulsing with radial scanwaves" },
+      listening: { desc: "Audio wave sensitivity oscillation reacting like an auditory iris" },
+      solving: { desc: "Constricted tight high-speed nucleus of concentrated points" },
+      weaving: { desc: "Dual interconnected helical spirals intertwining continuously" },
+      breathing: { desc: "Calm, slow organic rhythmic inhalation & exhalation" },
+      composing: { desc: "Ordered particle alignment sorting into structured rows" },
+      shaping: { desc: "Fluid morphing between torus, sphere, and organic teardrop" }
+    };
+
+    function render() {
+      time += 0.035;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      // Draw subtle ambient glow behind the dots
+      const glow = ctx.createRadialGradient(cx, cy, 10, cx, cy, 120);
+      glow.addColorStop(0, 'rgba(0, 242, 254, 0.18)');
+      glow.addColorStop(0.5, 'rgba(121, 40, 202, 0.1)');
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 120, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Project and render 3D mathematical particles
+      for (let p of points) {
+        let x = p.baseX;
+        let y = p.baseY;
+        let z = p.baseZ;
+
+        // STATE-SPECIFIC MATHEMATICAL BEHAVIORS
+        if (currentState === 'working') {
+          // Continuous 3D rotation
+          const cosT = Math.cos(time * 0.8);
+          const sinT = Math.sin(time * 0.8);
+          const x1 = x * cosT - z * sinT;
+          const z1 = z * cosT + x * sinT;
+          x = x1;
+          z = z1;
+        } 
+        else if (currentState === 'searching') {
+          // Radial scanwave pulsation
+          const ripple = Math.sin(time * 3 - Math.hypot(x, y) * 0.05) * 15;
+          x += (x / 90) * ripple;
+          y += (y / 90) * ripple;
+        }
+        else if (currentState === 'listening') {
+          // Auditory vertical frequency undulation
+          y += Math.sin(x * 0.08 + time * 4) * 18;
+          x *= (1 + Math.sin(time * 2) * 0.1);
+        }
+        else if (currentState === 'solving') {
+          // Concentrated high-speed nucleus
+          x *= 0.65;
+          y *= 0.65;
+          z *= 0.65;
+          const spin = time * 2.2;
+          const x1 = x * Math.cos(spin) - y * Math.sin(spin);
+          const y1 = y * Math.cos(spin) + x * Math.sin(spin);
+          x = x1;
+          y = y1;
+        }
+        else if (currentState === 'weaving') {
+          // Dual intertwining helical helix
+          const angle = (p.phase + time * 1.5);
+          x = Math.cos(angle) * 75;
+          y = Math.sin(angle * 2) * 45;
+          z = Math.sin(angle) * 75;
+        }
+        else if (currentState === 'breathing') {
+          // Slow organic expansion and contraction
+          const breath = 0.75 + (Math.sin(time * 1.2) + 1) * 0.25;
+          x *= breath;
+          y *= breath;
+          z *= breath;
+        }
+        else if (currentState === 'composing') {
+          // Quantize into crystalline grid points
+          y = Math.round(y / 18) * 18 + Math.sin(time * 2 + x * 0.05) * 4;
+        }
+        else if (currentState === 'shaping') {
+          // Torus / liquid donut transformation
+          const uAngle = p.phase + time;
+          const vAngle = p.speed * 2;
+          const R = 60;
+          const rRing = 24 + Math.sin(time * 2) * 8;
+          x = (R + rRing * Math.cos(vAngle)) * Math.cos(uAngle);
+          y = (R + rRing * Math.cos(vAngle)) * Math.sin(uAngle);
+          z = rRing * Math.sin(vAngle);
+        }
+
+        // Perspective projection
+        const fov = 300;
+        const scale = fov / (fov + z + 120);
+        const projX = cx + x * scale;
+        const projY = cy + y * scale;
+        const projSize = Math.max(0.8, p.size * scale);
+        const alpha = Math.min(1.0, Math.max(0.2, (z + 100) / 200));
+
+        // Draw particle dot
+        ctx.beginPath();
+        ctx.arc(projX, projY, projSize, 0, Math.PI * 2);
+        
+        // Crisp Apple / Cyan luminescence
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.95})`;
+        ctx.shadowColor = '#00f2fe';
+        ctx.shadowBlur = alpha > 0.6 ? 8 : 0;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    function setOrbState(state, btn) {
+      currentState = state;
+      document.querySelectorAll('.btn-state').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      stateTitle.textContent = `State: ${state.charAt(0).toUpperCase() + state.slice(1)}`;
+      stateDesc.textContent = stateMeta[state].desc;
+    }
+
+    render();
+  </script>
+</body>
+</html>

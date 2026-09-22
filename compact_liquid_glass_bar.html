@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Compact Liquid Glass Notch Bar</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000206;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 20px 40px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 16px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #a1a1aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    /* SCREEN FRAME */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 570px;
+      border-radius: 22px;
+      /* Wallpaper that matches user's purple/magenta desktop tone */
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Menu Bar */
+    .menu-bar {
+      height: 32px;
+      background: rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      position: relative;
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* HARDWARE CAMERA NOTCH (STATIONARY BASE AT Z-INDEX: 100) */
+    .hardware-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #000000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #282828;
+    }
+
+    /* ======================================================== */
+    /* COMPACT LIQUID GLASS CAPSULE (MATCHING USER CROP)        */
+    /* ======================================================== */
+    .compact-bar-anchor {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      /* IDLE: Tucked completely behind the hardware notch */
+      top: -55px;
+      width: 140px;
+      height: 52px;
+      z-index: 80; /* underneath notch so it slides OUT from under it */
+      opacity: 0;
+      cursor: pointer;
+      transition: 
+        top 0.52s cubic-bezier(0.175, 0.885, 0.32, 1.25),
+        width 0.44s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.28s ease;
+    }
+
+    /* ACTIVE STATE: Slides out from under the notch — COMPACT SIZE */
+    .screen-frame.active .compact-bar-anchor {
+      top: 36px; /* Sits right beneath the notch */
+      width: 175px; /* EXACT COMPACT SIZE MATCHING USER'S IMAGE */
+      opacity: 1;
+    }
+
+    /* EXACT macOS VIBRANCY MATERIAL (MATCHING USER'S CROPPED IMAGE) */
+    .compact-liquid-capsule {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 26px;
+      
+      /* Apple Control Center Liquid Vibrancy:
+         - Soft neutral frosted glass tint
+         - Heavy 40px Gaussian blur
+         - Microscopic 0.5px white specular border
+         - Top specular light bevel
+      */
+      background: rgba(45, 52, 68, 0.45);
+      backdrop-filter: blur(40px) saturate(1.9) contrast(1.05);
+      -webkit-backdrop-filter: blur(40px) saturate(1.9) contrast(1.05);
+      
+      border: 0.5px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 
+        0 20px 45px rgba(0, 0, 0, 0.55),
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0.5px rgba(255, 255, 255, 0.55);
+      
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      overflow: hidden;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .compact-liquid-capsule:hover {
+      background: rgba(55, 64, 82, 0.55);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* Circular frosted inset button (Exact match to crop) */
+    .glass-circle-btn {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 0.5px solid rgba(255, 255, 255, 0.45);
+      box-shadow: 
+        0 2px 6px rgba(0,0,0,0.2),
+        inset 0 1px 0.5px rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #ffffff;
+      transition: transform 0.2s ease;
+    }
+    .compact-bar-anchor:hover .glass-circle-btn {
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.32);
+    }
+
+    /* SF Pro Typography Group */
+    .meta-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      white-space: nowrap;
+    }
+    .meta-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.2px;
+    }
+    .meta-status {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 400;
+    }
+
+    /* Mock desktop window */
+    .mock-window {
+      position: absolute;
+      top: 130px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      background: rgba(25, 30, 42, 0.65);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    .w-dots { display: flex; gap: 6px; }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-r { background: #ff5f56; }
+    .w-y { background: #ffbd2e; }
+    .w-g { background: #27c93f; }
+    .mock-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .m-line { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+
+    /* macOS Dock */
+    .mac-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 54px;
+      background: rgba(30, 36, 50, 0.45);
+      backdrop-filter: blur(35px);
+      border-radius: 18px;
+      border: 0.5px solid rgba(255, 255, 255, 0.25);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-app {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    /* CONTROL DOCK */
+    .control-dock {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+    .btn-toggle {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-toggle:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+    .hint {
+      font-size: 12px;
+      color: #8fa0b5;
+    }
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Pure Compact Liquid Glass</div>
+    <h1>Compact Under-Notch Liquid Bar</h1>
+    <p>Exactly sized to your crop: zero wave clutter, frosted glass circle button & clean typography.</p>
+  </header>
+
+  <!-- SCREEN FRAME -->
+  <div class="screen-frame active" id="screenFrame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Safari</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 6:15 PM</span>
+      </div>
+    </div>
+
+    <!-- HARDWARE CAMERA NOTCH (STATIONARY BASE AT Z-INDEX: 100) -->
+    <div class="hardware-notch">
+      <div class="camera-lens"></div>
+    </div>
+
+    <!-- THE COMPACT LIQUID GLASS NOTCH BAR (Z-INDEX: 80, UNDER NOTCH) -->
+    <div class="compact-bar-anchor" id="compactBarAnchor" onclick="toggleBar()" title="Click to toggle emergence">
+      <div class="compact-liquid-capsule">
+        <!-- Frosted Circular Icon Button -->
+        
+        <!-- Stacky Typography -->
+        <div class="meta-stack">
+          <div class="meta-title">Stacky</div>
+          <div class="meta-status">Listening for prompt...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mock Window -->
+    <div class="mock-window">
+      <div class="w-dots">
+        <div class="w-dot w-r"></div>
+        <div class="w-dot w-y"></div>
+        <div class="w-dot w-g"></div>
+      </div>
+      <div class="mock-lines">
+        <div class="m-line" style="width: 45%;"></div>
+        <div class="m-line" style="width: 75%;"></div>
+        <div class="m-line" style="width: 60%;"></div>
+        <div class="m-line" style="width: 85%;"></div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="mac-dock">
+      <div class="dock-app">📁</div>
+      <div class="dock-app">🌐</div>
+      <div class="dock-app">✉️</div>
+      <div class="dock-app">💬</div>
+      <div class="dock-app">⚙️</div>
+    </div>
+  </div>
+
+  <!-- CONTROL DOCK -->
+  <div class="control-dock">
+    <button class="btn-toggle" onclick="toggleBar()">
+      <span id="btnText">Retract Under Notch</span> (<kbd>Space</kbd>)
+    </button>
+    <div class="hint">Clean, compact, no wave. Slides out smoothly from under the notch and retracts.</div>
+  </div>
+
+  <script>
+    const screen = document.getElementById('screenFrame');
+    const btnText = document.getElementById('btnText');
+
+    function toggleBar() {
+      screen.classList.toggle('active');
+      const isActive = screen.classList.contains('active');
+      btnText.textContent = isActive ? 'Retract Under Notch' : 'Emerge From Under Notch';
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleBar();
+      }
+    });
+  </script>
+</body>
+</html>

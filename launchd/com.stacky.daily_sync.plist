@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.stacky.daily_sync</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/Frameworks/Python.framework/Versions/3.12/bin/python3</string>
+        <string>/Users/jashanpreetsingh/Downloads/Stacky Ai /sync_to_phone.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/jashanpreetsingh/Downloads/Stacky Ai </string>
+
+    <!-- Native Zero-Resource Calendar Schedule: 11:45 AM & 11:45 PM -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Hour</key>
+            <integer>11</integer>
+            <key>Minute</key>
+            <integer>45</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>23</integer>
+            <key>Minute</key>
+            <integer>45</integer>
+        </dict>
+    </array>
+
+    <!-- Zero Background Footprint: Executes in ~2 seconds and exits immediately -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/jashanpreetsingh/Downloads/Stacky Ai /reports/daily_sync.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/jashanpreetsingh/Downloads/Stacky Ai /reports/daily_sync.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

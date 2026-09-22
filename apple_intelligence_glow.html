@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Apple Intelligence Siri Screen Glow</title>
+  <style>
+    :root {
+      --siri-cyan: #00f3ff;
+      --siri-purple: #9d4edd;
+      --siri-magenta: #ff007f;
+      --siri-amber: #ffaa00;
+      --siri-blue: #0070f3;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.001);
+      pointer-events: none;
+      user-select: none;
+      position: relative;
+    }
+
+    /* Outer Fluid Diffused Glow Box */
+    .glow-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 28px;
+      overflow: hidden;
+    }
+
+    /* The rotating conical/mesh gradient ribbon */
+    .glow-ribbon {
+      position: absolute;
+      inset: -150%;
+      background: conic-gradient(
+        from var(--angle, 0deg) at 50% 50%,
+        var(--siri-cyan) 0deg,
+        var(--siri-blue) 60deg,
+        var(--siri-purple) 120deg,
+        var(--siri-magenta) 180deg,
+        var(--siri-amber) 240deg,
+        var(--siri-cyan) 360deg
+      );
+      animation: rotateFluid 5s linear infinite;
+    }
+
+    /* Liquid Mask that hollows out the screen center and leaves a 38px soft radiant edge */
+    .glow-mask {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 1) calc(100% - 75px),
+        rgba(0, 0, 0, 0.4) calc(100% - 30px),
+        rgba(0, 0, 0, 0) 100%
+      );
+      mix-blend-mode: destination-out;
+    }
+
+    /* Gaussian Diffuse Stage */
+    .glow-blur-layer {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      filter: drop-shadow(0 0 20px rgba(0, 243, 255, 0.8)) drop-shadow(0 0 45px rgba(255, 0, 127, 0.6));
+    }
+
+    /* Pulse Breathing Effect on Speech */
+    .breathing-pulse {
+      position: absolute;
+      inset: 0;
+      border: 3px solid transparent;
+      border-radius: 26px;
+      box-shadow: 
+        inset 0 0 25px rgba(0, 243, 255, 0.7),
+        inset 0 0 50px rgba(157, 78, 221, 0.5),
+        inset 0 0 90px rgba(255, 0, 127, 0.35);
+      animation: pulseGlow 2.2s ease-in-out infinite alternate;
+    }
+
+    @property --angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    @keyframes rotateFluid {
+      0% {
+        --angle: 0deg;
+        transform: rotate(0deg) scale(1.1);
+      }
+      50% {
+        transform: rotate(180deg) scale(1.2);
+      }
+      100% {
+        --angle: 360deg;
+        transform: rotate(360deg) scale(1.1);
+      }
+    }
+
+    @keyframes pulseGlow {
+      0% {
+        opacity: 0.65;
+        filter: blur(1px);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0px);
+      }
+    }
+
+    /* Discreet Status Capsule in top-right corner */
+    .status-capsule {
+      position: fixed;
+      top: 18px;
+      right: 28px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: #fff;
+      background: rgba(10, 15, 25, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 6px 14px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .pulse-orb {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00f3ff;
+      box-shadow: 0 0 8px #00f3ff;
+      animation: orbBeat 1.4s ease-in-out infinite;
+    }
+
+    @keyframes orbBeat {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-container">
+    <div class="glow-ribbon"></div>
+    <div class="glow-blur-layer"></div>
+    <div class="breathing-pulse"></div>
+  </div>
+
+  <div class="status-capsule">
+    <div class="pulse-orb"></div>
+    <span>STACKY // ACTIVE</span>
+  </div>
+</body>
+</html>

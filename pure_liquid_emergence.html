@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Pure Liquid Notch Emergence</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #03050c;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 50px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    /* Switcher between Mode A (Pure Globe Only) and Mode B (Frosted Liquid Glass Rim) */
+    .mode-tabs {
+      display: flex;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      margin-bottom: 20px;
+      z-index: 20;
+    }
+    .tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab:hover { color: #fff; }
+    .tab.active {
+      background: rgba(0, 242, 254, 0.2);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: #00f2fe;
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.25);
+    }
+
+    /* MAC SCREEN SIMULATION */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 560px;
+      border-radius: 20px;
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Menu Bar */
+    .menu-bar {
+      height: 30px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* REAL HARDWARE NOTCH (Always stays crisp black at the top) */
+    .hardware-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 26px;
+      background: #000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #282828;
+    }
+
+    /* ======================================================== */
+    /* THE PURE GLOBE EMERGENCE STAGE (NO BLACK HEAVY BORDER)   */
+    /* ======================================================== */
+    .orb-stage {
+      position: absolute;
+      top: 13px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Outer Liquid Glass Capsule (Optional Mode B) */
+    .liquid-glass-lens {
+      position: relative;
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.55s cubic-bezier(0.19, 1, 0.22, 1);
+      /* Organic Elastic Emergence from notch */
+      transform: translateY(-40px) scale(0.1);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ACTIVE STATE: Drifts down seamlessly right below the notch */
+    .orb-stage.active .liquid-glass-lens {
+      transform: translateY(22px) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* MODE 1: PURE GLOBE (100% borderless, only pure liquid orb + chromatic aura) */
+    .mode-pure .liquid-glass-lens {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    /* MODE 2: LIQUID GLASS LENS (Refractive Apple Vision Glass Rim, no black plastic) */
+    .mode-glass .liquid-glass-lens {
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 65%, rgba(0, 242, 254, 0.08) 100%);
+      backdrop-filter: blur(28px) saturate(1.8);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 
+        0 15px 35px rgba(0,0,0,0.6),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 8px rgba(0, 242, 254, 0.2),
+        0 0 30px rgba(0, 242, 254, 0.2);
+    }
+
+    /* THE INNER COLORED GLASS SPHERE */
+    .globe-core-wrap {
+      position: relative;
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Diffuse living chromatic aura */
+    .liquid-aura {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.55) 0%, rgba(121, 40, 202, 0.4) 45%, rgba(255, 8, 68, 0.25) 75%, transparent 85%);
+      filter: blur(14px);
+      z-index: 1;
+      pointer-events: none;
+      animation: auraBreath 3.2s infinite ease-in-out alternate;
+    }
+
+    /* The high-res isolated colored sphere */
+    .globe-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      position: relative;
+      z-index: 3;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,0.85)) saturate(1.2);
+      animation: fluidBreath 3.2s infinite ease-in-out alternate;
+    }
+
+    @keyframes fluidBreath {
+      0% { transform: scale(0.95) rotate(-2deg); filter: saturate(1.15); }
+      50% { transform: scale(1.06) rotate(2deg); filter: saturate(1.4) drop-shadow(0 0 25px rgba(255, 8, 68, 0.65)); }
+      100% { transform: scale(0.98) rotate(0deg); filter: saturate(1.25); }
+    }
+    @keyframes auraBreath {
+      0% { transform: scale(0.85); opacity: 0.55; }
+      50% { transform: scale(1.35); opacity: 0.95; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    /* Desktop Window Context */
+    .mock-window {
+      position: absolute;
+      top: 110px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      background: rgba(13, 18, 30, 0.65);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    .w-dots { display: flex; gap: 6px; }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-r { background: #ff5f56; }
+    .w-y { background: #ffbd2e; }
+    .w-g { background: #27c93f; }
+    .mock-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .m-line { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+
+    /* macOS Dock */
+    .mac-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 54px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(35px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-app {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    /* Bottom Status Dock */
+    .info-bar {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+    .info-label { font-size: 13px; color: #00f2fe; }
+    .btn-action {
+      background: rgba(0, 242, 254, 0.2);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-action:hover { background: rgba(0, 242, 254, 0.35); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Pure Globe Emergence</div>
+    <h1>Refined Liquid Notch Presence</h1>
+  </header>
+
+  <!-- TOGGLE BETWEEN PURE GLOBE & REFRACTIVE LIQUID GLASS -->
+  <div class="mode-tabs">
+    <button class="tab active" onclick="setMode('pure', this)">1. Pure Globe Only (Zero Border / No Black Ring)</button>
+    <button class="tab" onclick="setMode('glass', this)">2. Frosted Liquid Glass Rim (Apple Vision Specular Glass)</button>
+  </div>
+
+  <!-- SIMULATED DISPLAY -->
+  <div class="screen-frame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 12:24 PM</span>
+      </div>
+    </div>
+
+    <!-- HARDWARE NOTCH (Always stays crisp black, never deformed into an ugly ring) -->
+    <div class="hardware-notch">
+      <div class="camera-lens"></div>
+    </div>
+
+    <!-- PURE GLOBE EMERGENCE (Drifts smoothly right below the notch) -->
+    <div class="orb-stage mode-pure active" id="orbStage" onclick="toggleOrb()">
+      <div class="liquid-glass-lens">
+        <div class="globe-core-wrap">
+          <div class="liquid-aura"></div>
+          <img src="assets/stacky_globe_improved.png" alt="Stacky Core Globe" class="globe-img" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Mock Window for Depth Perception -->
+    <div class="mock-window">
+      <div class="w-dots">
+        <div class="w-dot w-r"></div>
+        <div class="w-dot w-y"></div>
+        <div class="w-dot w-g"></div>
+      </div>
+      <div class="mock-lines">
+        <div class="m-line" style="width: 45%;"></div>
+        <div class="m-line" style="width: 75%;"></div>
+        <div class="m-line" style="width: 60%;"></div>
+        <div class="m-line" style="width: 85%;"></div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="mac-dock">
+      <div class="dock-app">📁</div>
+      <div class="dock-app">🌐</div>
+      <div class="dock-app">✉️</div>
+      <div class="dock-app">💬</div>
+      <div class="dock-app">⚙️</div>
+    </div>
+  </div>
+
+  <!-- CONTROL DOCK -->
+  <div class="info-bar">
+    <div class="info-label" id="infoText">Active: 100% Pure Globe Only — zero border, zero black rim, only the pure fluid breathing sphere floating seamlessly from the notch.</div>
+    <button class="btn-action" onclick="toggleOrb()">Toggle Emergence (<kbd>Space</kbd>)</button>
+  </div>
+
+  <script>
+    const stage = document.getElementById('orbStage');
+    const infoText = document.getElementById('infoText');
+
+    function setMode(mode, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      stage.classList.remove('mode-pure', 'mode-glass');
+      stage.classList.add('mode-' + mode);
+
+      if (mode === 'pure') {
+        infoText.textContent = "Active: 100% Pure Globe Only — completely eliminates the heavy black border. Only the glowing liquid sphere fluidly drops out from the notch.";
+      } else {
+        infoText.textContent = "Active: Frosted Liquid Glass Rim — uses translucent refractive liquid glass (specular highlights + blur) rather than dark solid borders.";
+      }
+    }
+
+    function toggleOrb() {
+      stage.classList.toggle('active');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleOrb();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Pure Liquid Globe Droplet</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #02040a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 40px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    p {
+      color: #889bb2;
+      font-size: 13px;
+    }
+
+    /* SCREEN FRAME */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 560px;
+      border-radius: 22px;
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Menu Bar */
+    .menu-bar {
+      height: 32px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      position: relative;
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* HARDWARE CAMERA NOTCH (Natural Mac hardware cutout) */
+    .hardware-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #282828;
+    }
+
+    /* ======================================================== */
+    /* THE PURE GLOBE DROPLET ITSELF (ZERO BORDERS, ZERO RIMS)  */
+    /* ======================================================== */
+    .globe-droplet-pod {
+      position: absolute;
+      top: 0px;
+      left: 50%;
+      width: 86px;
+      height: 86px;
+      margin-left: -43px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: none;
+      opacity: 0;
+      /* Initial state: tucked inside the notch */
+      transform: translateY(-20px) scale(0.15, 0.4);
+    }
+
+    /* Emergence Trigger: 1.4 seconds of smooth, liquid visceral physics */
+    .screen-frame.active .globe-droplet-pod {
+      opacity: 1;
+      pointer-events: auto;
+      animation: pureLiquidDrop 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes pureLiquidDrop {
+      0% {
+        /* Tucked inside notch, tiny and compressed */
+        transform: translateY(-15px) scale(0.2, 0.45);
+        opacity: 0;
+      }
+      18% {
+        /* Begins seeping downward from notch, stretching vertically like honey/mercury */
+        transform: translateY(12px) scale(0.55, 1.35);
+        opacity: 0.85;
+      }
+      45% {
+        /* Full downward drip elongation as it pulls away from the notch */
+        transform: translateY(52px) scale(0.8, 1.45);
+        opacity: 1;
+      }
+      68% {
+        /* Lands at destination: cushions down and squashes horizontally */
+        transform: translateY(72px) scale(1.18, 0.84);
+        opacity: 1;
+      }
+      82% {
+        /* Soft liquid rebound bounce upward */
+        transform: translateY(60px) scale(0.94, 1.08);
+      }
+      92% {
+        /* Micro settling */
+        transform: translateY(65px) scale(1.03, 0.98);
+      }
+      100% {
+        /* Settled in resting position as a perfect sphere */
+        transform: translateY(64px) scale(1, 1);
+        opacity: 1;
+      }
+    }
+
+    /* Ambient living aura directly attached to the globe */
+    .globe-chroma-aura {
+      position: absolute;
+      width: 115px;
+      height: 115px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.55) 0%, rgba(121, 40, 202, 0.4) 45%, rgba(255, 8, 68, 0.22) 75%, transparent 85%);
+      filter: blur(16px);
+      z-index: 1;
+      pointer-events: none;
+      animation: auraBreath 3.2s infinite ease-in-out alternate;
+    }
+
+    /* The actual isolated colored globe image */
+    .globe-element {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      position: relative;
+      z-index: 3;
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.85)) saturate(1.2);
+      animation: fluidIdle 3.2s infinite ease-in-out alternate;
+    }
+
+    @keyframes fluidIdle {
+      0% { transform: scale(0.96) rotate(-2deg); filter: saturate(1.15); }
+      50% { transform: scale(1.05) rotate(2deg); filter: saturate(1.4) drop-shadow(0 0 25px rgba(255, 8, 68, 0.65)); }
+      100% { transform: scale(0.98) rotate(0deg); filter: saturate(1.25); }
+    }
+    @keyframes auraBreath {
+      0% { transform: scale(0.85); opacity: 0.55; }
+      50% { transform: scale(1.35); opacity: 0.95; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    /* Desktop Window Context */
+    .mock-window {
+      position: absolute;
+      top: 130px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      background: rgba(13, 18, 30, 0.65);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    .w-dots { display: flex; gap: 6px; }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-r { background: #ff5f56; }
+    .w-y { background: #ffbd2e; }
+    .w-g { background: #27c93f; }
+    .mock-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .m-line { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+
+    /* macOS Dock */
+    .mac-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 54px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(35px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-app {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    /* CONTROL DOCK */
+    .control-dock {
+      margin-top: 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+    .btn-replay {
+      background: rgba(0, 242, 254, 0.2);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #00f2fe;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-replay:hover {
+      background: rgba(0, 242, 254, 0.35);
+      transform: translateY(-2px);
+    }
+    .hint {
+      font-size: 12px;
+      color: #8fa0b5;
+    }
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Pure Liquid Physics</div>
+    <h1>Globe Liquid Drop Emergence</h1>
+    <p>Zero border, zero frame — the globe itself seeps and drops smoothly from the camera notch like a liquid bead.</p>
+  </header>
+
+  <!-- SCREEN FRAME -->
+  <div class="screen-frame active" id="screenFrame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 12:28 PM</span>
+      </div>
+    </div>
+
+    <!-- HARDWARE CAMERA NOTCH -->
+    <div class="hardware-notch">
+      <div class="camera-lens"></div>
+    </div>
+
+    <!-- THE PURE GLOBE DROPLET (THE GLOBE ITSELF IS THE DROP) -->
+    <div class="globe-droplet-pod" id="globeDropletPod" onclick="replayDroplet()" title="Click to replay liquid drop">
+      <div class="globe-chroma-aura"></div>
+      <img src="assets/stacky_globe_improved.png" alt="Stacky Liquid Core" class="globe-element" />
+    </div>
+
+    <!-- Mock Window for Spatial Depth -->
+    <div class="mock-window">
+      <div class="w-dots">
+        <div class="w-dot w-r"></div>
+        <div class="w-dot w-y"></div>
+        <div class="w-dot w-g"></div>
+      </div>
+      <div class="mock-lines">
+        <div class="m-line" style="width: 45%;"></div>
+        <div class="m-line" style="width: 75%;"></div>
+        <div class="m-line" style="width: 60%;"></div>
+        <div class="m-line" style="width: 85%;"></div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="mac-dock">
+      <div class="dock-app">📁</div>
+      <div class="dock-app">🌐</div>
+      <div class="dock-app">✉️</div>
+      <div class="dock-app">💬</div>
+      <div class="dock-app">⚙️</div>
+    </div>
+  </div>
+
+  <!-- CONTROL DOCK -->
+  <div class="control-dock">
+    <button class="btn-replay" onclick="replayDroplet()">
+      Replay Smooth Liquid Drop (<kbd>Space</kbd>)
+    </button>
+    <div class="hint">1.4s ultra-smooth liquid timing: stretches vertically as it leaves the notch, then settles into a sphere.</div>
+  </div>
+
+  <script>
+    const screen = document.getElementById('screenFrame');
+    const pod = document.getElementById('globeDropletPod');
+
+    function replayDroplet() {
+      screen.classList.remove('active');
+      pod.style.animation = 'none';
+
+      setTimeout(() => {
+        screen.classList.add('active');
+        pod.style.animation = '';
+      }, 100);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        replayDroplet();
+      }
+    });
+  </script>
+</body>
+</html>

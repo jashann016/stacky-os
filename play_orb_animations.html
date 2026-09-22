@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Live Voice Animation Player</title>
+  <style>
+    :root {
+      --bg: #03050c;
+      --cyan: #00f2fe;
+      --magenta: #ff0844;
+      --violet: #7928ca;
+      --amber: #ff9a44;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #03050c;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 40px 20px;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .bg-ambient {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: 
+        radial-gradient(circle at 50% 35%, rgba(121, 40, 202, 0.18), transparent 60%),
+        radial-gradient(circle at 20% 70%, rgba(0, 242, 254, 0.1), transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 8, 68, 0.1), transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 30%, #a855f7 70%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    header p {
+      color: #889bb2;
+      font-size: 14px;
+    }
+
+    /* THE STAGE */
+    .viewport-box {
+      position: relative;
+      z-index: 5;
+      width: 460px;
+      height: 460px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    canvas#fxCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 460px;
+      height: 460px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .globe-container {
+      position: relative;
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .globe-aura {
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(121, 40, 202, 0.35) 45%, rgba(255, 8, 68, 0.2) 70%, transparent 85%);
+      filter: blur(24px);
+      z-index: 1;
+      pointer-events: none;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    .globe-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      position: relative;
+      z-index: 3;
+      filter: drop-shadow(0 15px 35px rgba(0,0,0,0.85));
+      transition: filter 0.3s ease, transform 0.3s ease;
+    }
+
+    /* PLAYABLE MODES */
+    /* 1. Sonic Wave */
+    .mode-sonic .globe-img {
+      animation: sonicBeat 1.4s infinite cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    @keyframes sonicBeat {
+      0% { transform: scale(1); }
+      20% { transform: scale(1.06); filter: brightness(1.15) drop-shadow(0 0 35px rgba(0, 242, 254, 0.7)); }
+      40% { transform: scale(0.98); }
+      60% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    /* 2. Quantum Orbit */
+    .mode-particles .globe-img {
+      animation: quantumFloat 4s infinite ease-in-out alternate;
+    }
+    @keyframes quantumFloat {
+      0% { transform: translateY(-4px) scale(0.99); filter: drop-shadow(0 0 25px rgba(121, 40, 202, 0.6)); }
+      100% { transform: translateY(4px) scale(1.03); filter: drop-shadow(0 0 40px rgba(0, 242, 254, 0.8)); }
+    }
+
+    /* 3. Fluid Breath */
+    .mode-breath .globe-img {
+      animation: fluidBreath 3s infinite ease-in-out alternate;
+    }
+    .mode-breath .globe-aura {
+      animation: auraPulse 3s infinite ease-in-out alternate;
+    }
+    @keyframes fluidBreath {
+      0% { transform: scale(0.96) rotate(-2deg); filter: saturate(1.1); }
+      50% { transform: scale(1.05) rotate(2deg); filter: saturate(1.4) drop-shadow(0 0 45px rgba(255, 8, 68, 0.7)); }
+      100% { transform: scale(0.98) rotate(0deg); filter: saturate(1.2); }
+    }
+    @keyframes auraPulse {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.7; }
+    }
+
+    /* 4. Prismatic Gyro */
+    .mode-gyro .globe-img {
+      animation: gyroRotate 10s infinite linear;
+    }
+    @keyframes gyroRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* CONTROLS DOCK */
+    .controls {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 8px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      margin-bottom: 20px;
+    }
+    .btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .btn.active {
+      background: rgba(0, 242, 254, 0.18);
+      border-color: rgba(0, 242, 254, 0.6);
+      color: #00f2fe;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .tuning {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .tuning input[type="range"] {
+      -webkit-appearance: none;
+      width: 140px;
+      height: 4px;
+      background: #1e293b;
+      border-radius: 2px;
+      outline: none;
+    }
+    .tuning input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #00f2fe;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00f2fe;
+    }
+
+    .caption {
+      position: relative;
+      z-index: 10;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #00f2fe;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+    }
+    .hint {
+      position: relative;
+      z-index: 10;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+
+  <header>
+    <div class="badge">Live Motion Player</div>
+    <h1>Stacky AI Voice Globe Animations</h1>
+    <p>Watch each animation style play live on the isolated circular glass sphere.</p>
+  </header>
+
+  <!-- VIEWPORT -->
+  <div class="viewport-box mode-sonic" id="viewportBox">
+    <canvas id="fxCanvas" width="460" height="460"></canvas>
+    
+    <div class="globe-container" id="globeContainer" title="Click to trigger speech surge">
+      <div class="globe-aura"></div>
+      <img src="assets/stacky_globe_improved.png" alt="Stacky Core Globe" class="globe-img" id="globeImg" />
+    </div>
+  </div>
+
+  <!-- CONTROLS DOCK -->
+  <div class="controls">
+    <button class="btn active" onclick="setMode('sonic', this)">
+      <span class="dot"></span>
+      1. Sonic Soundwaves
+    </button>
+    <button class="btn" onclick="setMode('particles', this)">
+      <span class="dot"></span>
+      2. Quantum Particles
+    </button>
+    <button class="btn" onclick="setMode('breath', this)">
+      <span class="dot"></span>
+      3. Fluid Breathing
+    </button>
+    <button class="btn" onclick="setMode('gyro', this)">
+      <span class="dot"></span>
+      4. Prismatic Gyro
+    </button>
+  </div>
+
+  <!-- VOICE INTENSITY SLIDER -->
+  <div class="tuning">
+    <span>Audio Wave Sensitivity:</span>
+    <input type="range" id="sensRange" min="1" max="10" value="5" oninput="changeSens(this.value)">
+    <span id="sensVal">5x</span>
+  </div>
+
+  <div class="caption" id="captionText">Active: Sonic Soundwaves — Multi-spectral voice frequency rings expanding from core</div>
+  <div class="hint">Click the globe at any time to simulate an active speaking burst</div>
+
+  <script>
+    const canvas = document.getElementById('fxCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('viewportBox');
+    const caption = document.getElementById('captionText');
+
+    let currentMode = 'sonic';
+    let sensitivity = 1.0;
+    let time = 0;
+
+    // Quantum Particles
+    const particles = [];
+    const NUM_P = 70;
+    for (let i = 0; i < NUM_P; i++) {
+      particles.push({
+        angle: Math.random() * Math.PI * 2,
+        radius: 115 + Math.random() * 95,
+        speed: (Math.random() * 0.02 + 0.008) * (Math.random() > 0.5 ? 1 : -1),
+        size: Math.random() * 3.5 + 1.2,
+        color: ['#00f2fe', '#ff0844', '#7928ca', '#ff9a44', '#38ef7d', '#ffffff'][Math.floor(Math.random() * 6)],
+        pulse: Math.random() * Math.PI
+      });
+    }
+
+    // Sonic Ripples
+    const ripples = [];
+    function emitRipple() {
+      ripples.push({
+        r: 102,
+        maxR: 225,
+        opacity: 0.95,
+        color: ['#00f2fe', '#ff0844', '#7928ca', '#38ef7d'][Math.floor(Math.random() * 4)],
+        width: 2.5
+      });
+    }
+
+    let emitCounter = 0;
+
+    function loop() {
+      time += 0.035;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      // 1. SONIC SOUNDWAVES
+      if (currentMode === 'sonic') {
+        emitCounter++;
+        const interval = Math.max(10, Math.floor(28 / sensitivity));
+        if (emitCounter % interval === 0) {
+          emitRipple();
+        }
+
+        for (let i = ripples.length - 1; i >= 0; i--) {
+          const r = ripples[i];
+          r.r += 2.0 * sensitivity;
+          r.opacity -= 0.014 * sensitivity;
+
+          if (r.opacity <= 0 || r.r >= r.maxR) {
+            ripples.splice(i, 1);
+            continue;
+          }
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, r.r, 0, Math.PI * 2);
+          ctx.strokeStyle = r.color;
+          ctx.globalAlpha = r.opacity;
+          ctx.lineWidth = r.width;
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = r.color;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1.0;
+        }
+
+        // Concentric energetic arcs
+        for (let a = 0; a < 3; a++) {
+          const arcR = 114 + a * 18;
+          const start = time * (1.3 + a * 0.4);
+          const end = start + Math.PI * 0.65;
+          ctx.beginPath();
+          ctx.arc(cx, cy, arcR, start, end);
+          ctx.strokeStyle = a === 0 ? '#00f2fe' : (a === 1 ? '#ff0844' : '#7928ca');
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          ctx.globalAlpha = 0.7;
+          ctx.shadowBlur = 14;
+          ctx.shadowColor = ctx.strokeStyle;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1.0;
+        }
+      }
+
+      // 2. QUANTUM PARTICLES
+      else if (currentMode === 'particles') {
+        for (let p of particles) {
+          p.angle += p.speed * sensitivity;
+          p.pulse += 0.05;
+
+          const r = p.radius + Math.sin(p.pulse) * 8;
+          const x = cx + Math.cos(p.angle) * r;
+          const y = cy + Math.sin(p.angle) * (r * 0.9);
+
+          ctx.beginPath();
+          ctx.arc(x, y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = p.color;
+          ctx.globalAlpha = 0.85 + Math.sin(p.pulse) * 0.15;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1.0;
+
+          // Light filaments between nearest particles
+          for (let p2 of particles) {
+            const x2 = cx + Math.cos(p2.angle) * p2.radius;
+            const y2 = cy + Math.sin(p2.angle) * (p2.radius * 0.9);
+            const dist = Math.hypot(x - x2, y - y2);
+            if (dist < 38) {
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+              ctx.lineTo(x2, y2);
+              ctx.strokeStyle = p.color;
+              ctx.globalAlpha = (1 - dist / 38) * 0.3;
+              ctx.lineWidth = 0.7;
+              ctx.stroke();
+              ctx.globalAlpha = 1.0;
+            }
+          }
+        }
+      }
+
+      // 3. FLUID BREATHING
+      else if (currentMode === 'breath') {
+        const pulse = Math.sin(time * 2.6) * 14 * sensitivity;
+        const breathRadius = 118 + pulse;
+
+        const grad = ctx.createRadialGradient(cx, cy, 100, cx, cy, breathRadius + 35);
+        grad.addColorStop(0, 'rgba(0, 242, 254, 0.45)');
+        grad.addColorStop(0.5, 'rgba(121, 40, 202, 0.35)');
+        grad.addColorStop(1, 'transparent');
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, breathRadius + 25, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        for (let theta = 0; theta < Math.PI * 2; theta += 0.1) {
+          const wobble = Math.sin(theta * 7 + time * 3.5) * 6;
+          const r = breathRadius + wobble;
+          const x = cx + Math.cos(theta) * r;
+          const y = cy + Math.sin(theta) * r;
+          if (theta === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = '#00f2fe';
+        ctx.lineWidth = 2.5;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#00f2fe';
+        ctx.globalAlpha = 0.75;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1.0;
+      }
+
+      // 4. PRISMATIC GYRO
+      else if (currentMode === 'gyro') {
+        for (let ring = 0; ring < 3; ring++) {
+          const ringRadius = 118 + ring * 24;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(ring * (Math.PI / 3) + time * (0.4 * sensitivity));
+          ctx.scale(1, 0.42);
+
+          ctx.beginPath();
+          ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = ring === 0 ? '#00f2fe' : (ring === 1 ? '#ff0844' : '#ff9a44');
+          ctx.lineWidth = 3.5;
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = ctx.strokeStyle;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    function setMode(mode, btn) {
+      currentMode = mode;
+      viewport.className = 'viewport-box mode-' + mode;
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const descs = {
+        sonic: 'Active: Sonic Soundwaves — Multi-spectral voice frequency rings expanding from core',
+        particles: 'Active: Quantum Particles — Luminous orbiting starlight swarm with dynamic filaments',
+        breath: 'Active: Fluid Breathing — Living organic plasma luminescence and breathing wave physics',
+        gyro: 'Active: Prismatic Gyro — 3D Holographic spectral rings rotating with spatial depth'
+      };
+      caption.textContent = descs[mode];
+    }
+
+    function changeSens(val) {
+      sensitivity = parseFloat(val) / 5;
+      document.getElementById('sensVal').textContent = val + 'x';
+    }
+
+    document.getElementById('globeContainer').addEventListener('click', () => {
+      for (let k = 0; k < 5; k++) {
+        setTimeout(emitRipple, k * 70);
+      }
+    });
+
+    loop();
+  </script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Fluid Breathing Voice Orb</title>
+  <style>
+    :root {
+      --cyan: #00f2fe;
+      --violet: #7928ca;
+      --magenta: #ff0844;
+      --amber: #ff9a44;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020308;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Ambient atmospheric glow */
+    .ambient-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(121, 40, 202, 0.18) 0%, rgba(0, 242, 254, 0.08) 40%, transparent 70%);
+      filter: blur(50px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Floating Stage */
+    .orb-stage {
+      position: relative;
+      width: 460px;
+      height: 460px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+    }
+
+    canvas#plasmaCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 460px;
+      height: 460px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Core Globe Container */
+    .globe-wrapper {
+      position: relative;
+      width: 215px;
+      height: 215px;
+      border-radius: 50%;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Multi-spectral dynamic aura */
+    .globe-aura {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.45) 0%, rgba(121, 40, 202, 0.38) 45%, rgba(255, 8, 68, 0.22) 70%, transparent 85%);
+      filter: blur(28px);
+      z-index: 1;
+      pointer-events: none;
+      animation: fluidAuraPulse 3.4s infinite ease-in-out alternate;
+    }
+
+    /* Fluid breathing deformation on the core globe */
+    .globe-core {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      position: relative;
+      z-index: 3;
+      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.85)) saturate(1.15);
+      animation: fluidBreathMotion 3.4s infinite ease-in-out alternate;
+      transition: filter 0.3s ease;
+    }
+
+    @keyframes fluidBreathMotion {
+      0% {
+        transform: scale(0.96) rotate(-2deg);
+        filter: drop-shadow(0 15px 30px rgba(0, 242, 254, 0.4)) saturate(1.15) brightness(1.0);
+      }
+      50% {
+        transform: scale(1.06) rotate(2.5deg);
+        filter: drop-shadow(0 25px 50px rgba(255, 8, 68, 0.65)) saturate(1.4) brightness(1.12);
+      }
+      100% {
+        transform: scale(0.98) rotate(-0.5deg);
+        filter: drop-shadow(0 18px 35px rgba(121, 40, 202, 0.55)) saturate(1.25) brightness(1.05);
+      }
+    }
+
+    @keyframes fluidAuraPulse {
+      0% {
+        transform: scale(0.88);
+        opacity: 0.6;
+      }
+      50% {
+        transform: scale(1.35);
+        opacity: 0.95;
+      }
+      100% {
+        transform: scale(0.95);
+        opacity: 0.7;
+      }
+    }
+
+    /* Audio speech surge state */
+    .speaking .globe-core {
+      animation: speakingSurge 0.9s infinite ease-in-out alternate !important;
+    }
+    .speaking .globe-aura {
+      animation: speakingAura 0.9s infinite ease-in-out alternate !important;
+    }
+
+    @keyframes speakingSurge {
+      0% {
+        transform: scale(1.02) rotate(-1deg);
+        filter: drop-shadow(0 0 40px rgba(0, 242, 254, 0.8)) brightness(1.2) saturate(1.4);
+      }
+      100% {
+        transform: scale(1.12) rotate(2deg);
+        filter: drop-shadow(0 0 65px rgba(255, 8, 68, 0.9)) brightness(1.35) saturate(1.6);
+      }
+    }
+
+    @keyframes speakingAura {
+      0% { transform: scale(1.15); opacity: 0.8; }
+      100% { transform: scale(1.6); opacity: 1; }
+    }
+
+    /* Minimal Floating Indicator Info */
+    .hud-meta {
+      position: absolute;
+      bottom: 40px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .state-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #00f2fe;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+    }
+    .state-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00f2fe;
+      box-shadow: 0 0 10px #00f2fe;
+    }
+
+    .tip {
+      font-size: 11px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-glow"></div>
+
+  <div class="orb-stage" id="orbStage">
+    <canvas id="plasmaCanvas" width="460" height="460"></canvas>
+    
+    <div class="globe-wrapper" id="globeWrapper" title="Click to simulate speaking surge">
+      <div class="globe-aura"></div>
+      <img src="assets/stacky_globe_improved.png" alt="Stacky Fluid Orb" class="globe-core" />
+    </div>
+  </div>
+
+  <div class="hud-meta">
+    <div class="state-pill" id="statePill">
+      <span class="state-dot" id="stateDot"></span>
+      <span id="stateText">Listening Ambient</span>
+    </div>
+    <div class="tip">Click the orb or press Spacebar to toggle Speaking Surge</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('plasmaCanvas');
+    const ctx = canvas.getContext('2d');
+    const stage = document.getElementById('orbStage');
+    const statePill = document.getElementById('statePill');
+    const stateText = document.getElementById('stateText');
+    const stateDot = document.getElementById('stateDot');
+
+    let isSpeaking = false;
+    let time = 0;
+
+    function renderPlasma() {
+      time += isSpeaking ? 0.065 : 0.035;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const baseRadius = 118;
+      const pulseAmp = isSpeaking ? 22 : 12;
+      const pulse = Math.sin(time * 2.8) * pulseAmp;
+      const currentRadius = baseRadius + pulse;
+
+      // Outer diffused chromatic aura
+      const grad = ctx.createRadialGradient(cx, cy, 95, cx, cy, currentRadius + (isSpeaking ? 55 : 35));
+      if (isSpeaking) {
+        grad.addColorStop(0, 'rgba(255, 8, 68, 0.55)');
+        grad.addColorStop(0.4, 'rgba(121, 40, 202, 0.45)');
+        grad.addColorStop(0.8, 'rgba(0, 242, 254, 0.35)');
+        grad.addColorStop(1, 'transparent');
+      } else {
+        grad.addColorStop(0, 'rgba(0, 242, 254, 0.42)');
+        grad.addColorStop(0.5, 'rgba(121, 40, 202, 0.32)');
+        grad.addColorStop(0.85, 'rgba(255, 8, 68, 0.15)');
+        grad.addColorStop(1, 'transparent');
+      }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, currentRadius + 30, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Living harmonic plasma contours (Sine fluid perimeter)
+      for (let layer = 0; layer < 2; layer++) {
+        ctx.beginPath();
+        const harmonics = layer === 0 ? 6 : 8;
+        const waveSpeed = time * (layer === 0 ? 3.2 : -2.6);
+        const waveAmp = (layer === 0 ? 7 : 5) * (isSpeaking ? 1.8 : 1.0);
+        const layerR = currentRadius + layer * 6;
+
+        for (let theta = 0; theta <= Math.PI * 2; theta += 0.08) {
+          const wobble = Math.sin(theta * harmonics + waveSpeed) * waveAmp;
+          const r = layerR + wobble;
+          const x = cx + Math.cos(theta) * r;
+          const y = cy + Math.sin(theta) * r;
+
+          if (theta === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+
+        ctx.closePath();
+        const strokeColor = layer === 0 ? (isSpeaking ? '#ff0844' : '#00f2fe') : '#a855f7';
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = layer === 0 ? 2.5 : 1.8;
+        ctx.shadowBlur = isSpeaking ? 28 : 18;
+        ctx.shadowColor = strokeColor;
+        ctx.globalAlpha = layer === 0 ? 0.8 : 0.55;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1.0;
+      }
+
+      requestAnimationFrame(renderPlasma);
+    }
+
+    function toggleSpeaking() {
+      isSpeaking = !isSpeaking;
+      if (isSpeaking) {
+        stage.classList.add('speaking');
+        stateText.textContent = 'Voice Synthesizing / Speaking';
+        statePill.style.borderColor = 'rgba(255, 8, 68, 0.6)';
+        statePill.style.color = '#ff0844';
+        statePill.style.boxShadow = '0 0 25px rgba(255, 8, 68, 0.35)';
+        stateDot.style.background = '#ff0844';
+        stateDot.style.boxShadow = '0 0 12px #ff0844';
+      } else {
+        stage.classList.remove('speaking');
+        stateText.textContent = 'Listening Ambient';
+        statePill.style.borderColor = 'rgba(0, 242, 254, 0.3)';
+        statePill.style.color = '#00f2fe';
+        statePill.style.boxShadow = '0 0 20px rgba(0, 242, 254, 0.2)';
+        stateDot.style.background = '#00f2fe';
+        stateDot.style.boxShadow = '0 0 10px #00f2fe';
+      }
+    }
+
+    document.getElementById('globeWrapper').addEventListener('click', toggleSpeaking);
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleSpeaking();
+      }
+    });
+
+    renderPlasma();
+  </script>
+</body>
+</html>

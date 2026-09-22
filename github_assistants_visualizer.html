@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub AI Assistants — Screen Presence Comparison</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #04060d;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 60px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    p {
+      color: #8fa0b5;
+      font-size: 13px;
+    }
+
+    /* TABS */
+    .tabs-bar {
+      display: flex;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      margin-bottom: 22px;
+      z-index: 20;
+    }
+    .tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+    .tab.active {
+      background: rgba(0, 242, 254, 0.2);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: #00f2fe;
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.25);
+    }
+    .tab-tag {
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* SCREEN FRAME */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 560px;
+      border-radius: 22px;
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Menu Bar */
+    .menu-bar {
+      height: 32px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      position: relative;
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* HARDWARE NOTCH */
+    .hardware-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #282828;
+    }
+
+    /* ======================================================== */
+    /* 1. SCOUT UI (NOTCH CAPSULE DROP WITH AUDIO SINE WAVE)    */
+    /* ======================================================== */
+    .view-scout {
+      position: absolute;
+      top: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 48px;
+      background: rgba(0, 0, 0, 0.9);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(255, 255, 255, 0.08);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      animation: scoutSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes scoutSlide {
+      0% { transform: translateX(-50%) translateY(-20px) scale(0.9); opacity: 0; }
+      100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+    }
+    .scout-wave {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .scout-bar {
+      width: 3px;
+      height: 16px;
+      background: #00f2fe;
+      border-radius: 2px;
+      animation: soundWave 0.8s infinite ease-in-out alternate;
+    }
+    .scout-bar:nth-child(2) { animation-delay: 0.15s; height: 26px; background: #fff; }
+    .scout-bar:nth-child(3) { animation-delay: 0.3s; height: 18px; background: #00f2fe; }
+    .scout-bar:nth-child(4) { animation-delay: 0.45s; height: 12px; }
+    @keyframes soundWave {
+      0% { transform: scaleY(0.4); }
+      100% { transform: scaleY(1.3); }
+    }
+    .scout-status { font-size: 13px; font-weight: 600; color: #fff; }
+    .scout-tag { font-size: 11px; color: #64748b; background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 6px; }
+
+    /* ======================================================== */
+    /* 2. HOVER UI (FLOATING CURSOR PANEL)                      */
+    /* ======================================================== */
+    .view-hover {
+      position: absolute;
+      top: 170px;
+      left: 360px;
+      width: 280px;
+      background: rgba(18, 24, 38, 0.88);
+      backdrop-filter: blur(35px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(0, 242, 254, 0.2);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      padding: 14px 16px;
+      gap: 10px;
+      animation: hoverFloat 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes hoverFloat {
+      0% { transform: translateY(12px) scale(0.95); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .cursor-sim {
+      position: absolute;
+      top: 155px;
+      left: 345px;
+      font-size: 20px;
+      z-index: 110;
+      display: none;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+    }
+    .hover-chip-row { display: flex; gap: 6px; }
+    .hover-chip { font-size: 10px; background: rgba(0, 242, 254, 0.15); color: #00f2fe; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+    .hover-text { font-size: 12px; color: #cbd5e1; line-height: 1.4; }
+
+    /* ======================================================== */
+    /* 3. MACOS-USE / LOOKOUT (SCREEN SCANNING RADAR)           */
+    /* ======================================================== */
+    .view-lookout {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 80;
+      display: none;
+    }
+    .scan-reticle {
+      position: absolute;
+      top: 130px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      border: 2px dashed #00f2fe;
+      border-radius: 14px;
+      box-shadow: 0 0 40px rgba(0, 242, 254, 0.2), inset 0 0 40px rgba(0, 242, 254, 0.1);
+      animation: pulseRadar 2s infinite ease-in-out alternate;
+    }
+    .reticle-tag {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #00f2fe;
+      color: #020617;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
+    @keyframes pulseRadar {
+      0% { opacity: 0.5; border-color: rgba(0, 242, 254, 0.4); }
+      100% { opacity: 1; border-color: rgba(0, 242, 254, 0.9); }
+    }
+
+    /* ======================================================== */
+    /* 4. STACKY AI (YOUR FLUID BREATHING GLOBE DROP)           */
+    /* ======================================================== */
+    .view-stacky {
+      position: absolute;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: stackyEmergence 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+    @keyframes stackyEmergence {
+      0% { transform: translateX(-50%) translateY(-25px) scale(0.3, 0.6); opacity: 0; }
+      40% { transform: translateX(-50%) translateY(35px) scale(0.85, 1.3); opacity: 1; }
+      75% { transform: translateX(-50%) translateY(52px) scale(1.15, 0.88); }
+      100% { transform: translateX(-50%) translateY(48px) scale(1, 1); opacity: 1; }
+    }
+    .stacky-aura {
+      position: absolute;
+      width: 115px;
+      height: 115px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.55) 0%, rgba(121, 40, 202, 0.4) 45%, rgba(255, 8, 68, 0.22) 75%, transparent 85%);
+      filter: blur(14px);
+      animation: auraBreathe 3s infinite ease-in-out alternate;
+    }
+    .stacky-globe {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      position: relative;
+      z-index: 3;
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.85)) saturate(1.2);
+      animation: globeBreathe 3s infinite ease-in-out alternate;
+    }
+    @keyframes globeBreathe {
+      0% { transform: scale(0.96) rotate(-2deg); }
+      50% { transform: scale(1.05) rotate(2deg); filter: drop-shadow(0 0 25px rgba(255, 8, 68, 0.65)) saturate(1.4); }
+      100% { transform: scale(0.98) rotate(0deg); }
+    }
+    @keyframes auraBreathe {
+      0% { transform: scale(0.85); opacity: 0.55; }
+      50% { transform: scale(1.3); opacity: 0.95; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    /* Mock desktop window */
+    .mock-window {
+      position: absolute;
+      top: 130px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      background: rgba(13, 18, 30, 0.65);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    .w-dots { display: flex; gap: 6px; }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-r { background: #ff5f56; }
+    .w-y { background: #ffbd2e; }
+    .w-g { background: #27c93f; }
+    .mock-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .m-line { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+
+    /* macOS Dock */
+    .mac-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 54px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(35px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-app {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    /* CARD DETAILS */
+    .details-card {
+      margin-top: 20px;
+      max-width: 960px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+    .card-info h3 { font-size: 16px; color: #00f2fe; margin-bottom: 4px; font-weight: 700; }
+    .card-info p { font-size: 13px; color: #94a3b8; max-width: 680px; }
+    .repo-link {
+      background: rgba(0, 242, 254, 0.15);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #00f2fe;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .repo-link:hover { background: rgba(0, 242, 254, 0.25); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Visual Breakdown</div>
+    <h1>How GitHub AI Desktop Assistants Look On Screen</h1>
+    <p>Switch between the top open-source projects below to see their exact on-screen presence & interaction design.</p>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs-bar">
+    <button class="tab active" onclick="showAssistant('scout', this)">
+      <span>1. Scout</span>
+      <span class="tab-tag">Notch Voice Capsule</span>
+    </button>
+    <button class="tab" onclick="showAssistant('hover', this)">
+      <span>2. Hover</span>
+      <span class="tab-tag">Cursor Floating Panel</span>
+    </button>
+    <button class="tab" onclick="showAssistant('lookout', this)">
+      <span>3. Lookout / MacOS-Use</span>
+      <span class="tab-tag">GUI Screen Scanner</span>
+    </button>
+    <button class="tab" onclick="showAssistant('stacky', this)">
+      <span>4. Stacky AI</span>
+      <span class="tab-tag">Fluid Droplet Globe</span>
+    </button>
+  </div>
+
+  <!-- SCREEN FRAME -->
+  <div class="screen-frame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 6:00 PM</span>
+      </div>
+    </div>
+
+    <!-- HARDWARE NOTCH -->
+    <div class="hardware-notch">
+      <div class="camera-lens"></div>
+    </div>
+
+    <!-- 1. SCOUT UI -->
+    <div class="view-scout" id="viewScout">
+      <div class="scout-wave">
+        <div class="scout-bar"></div>
+        <div class="scout-bar"></div>
+        <div class="scout-bar"></div>
+        <div class="scout-bar"></div>
+      </div>
+      <div class="scout-status">Scout Listening...</div>
+      <div class="scout-tag">ElevenLabs</div>
+    </div>
+
+    <!-- 2. HOVER UI -->
+    <div class="cursor-sim" id="cursorSim">↖</div>
+    <div class="view-hover" id="viewHover">
+      <div class="hover-chip-row">
+        <span class="hover-chip">Explain Code</span>
+        <span class="hover-chip">Rewrite</span>
+      </div>
+      <div class="hover-text">
+        Function processes incoming payloads asynchronously with error recovery.
+      </div>
+    </div>
+
+    <!-- 3. LOOKOUT UI -->
+    <div class="view-lookout" id="viewLookout">
+      <div class="scan-reticle">
+        <span class="reticle-tag">ScreenCaptureKit • Analyzing Window</span>
+      </div>
+    </div>
+
+    <!-- 4. STACKY AI UI -->
+    <div class="view-stacky" id="viewStacky">
+      <div class="stacky-aura"></div>
+      <img src="assets/stacky_globe_improved.png" alt="Stacky Core" class="stacky-globe" />
+    </div>
+
+    <!-- Mock Window -->
+    <div class="mock-window">
+      <div class="w-dots">
+        <div class="w-dot w-r"></div>
+        <div class="w-dot w-y"></div>
+        <div class="w-dot w-g"></div>
+      </div>
+      <div class="mock-lines">
+        <div class="m-line" style="width: 45%;"></div>
+        <div class="m-line" style="width: 75%;"></div>
+        <div class="m-line" style="width: 60%;"></div>
+        <div class="m-line" style="width: 85%;"></div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="mac-dock">
+      <div class="dock-app">📁</div>
+      <div class="dock-app">🌐</div>
+      <div class="dock-app">✉️</div>
+      <div class="dock-app">💬</div>
+      <div class="dock-app">⚙️</div>
+    </div>
+  </div>
+
+  <!-- DETAILS BANNER -->
+  <div class="details-card">
+    <div class="card-info">
+      <h3 id="cardTitle">Scout (bloxy-studios/scout)</h3>
+      <p id="cardDesc">A black horizontal pill with live soundwave equalizer bars that drops down 20px from the camera notch whenever you trigger voice chat. Disappears completely when finished.</p>
+    </div>
+    <a href="https://github.com/bloxy-studios/scout" target="_blank" class="repo-link" id="cardLink">View on GitHub ↗</a>
+  </div>
+
+  <script>
+    const scout = document.getElementById('viewScout');
+    const hover = document.getElementById('viewHover');
+    const cursor = document.getElementById('cursorSim');
+    const lookout = document.getElementById('viewLookout');
+    const stacky = document.getElementById('viewStacky');
+
+    const cardTitle = document.getElementById('cardTitle');
+    const cardDesc = document.getElementById('cardDesc');
+    const cardLink = document.getElementById('cardLink');
+
+    const data = {
+      scout: {
+        title: "1. Scout (bloxy-studios/scout) — Notch Capsule",
+        desc: "Lives hidden in the notch. When summoned via hotkey, a black pill drops down with live animated soundwave bars and a status indicator. Focuses on low-friction voice queries without opening windows.",
+        link: "https://github.com/bloxy-studios/scout",
+        apply: () => {
+          scout.style.display = 'flex';
+          hover.style.display = 'none';
+          cursor.style.display = 'none';
+          lookout.style.display = 'none';
+          stacky.style.display = 'none';
+        }
+      },
+      hover: {
+        title: "2. Hover (harishkotra/hover) — Cursor Floating Panel",
+        desc: "Has zero fixed position. When you highlight any text on your screen, a frosted glass chip floats directly next to your mouse cursor with options like 'Explain', 'Summarize', or 'Rewrite'.",
+        link: "https://github.com/harishkotra/hover",
+        apply: () => {
+          scout.style.display = 'none';
+          hover.style.display = 'flex';
+          cursor.style.display = 'block';
+          lookout.style.display = 'none';
+          stacky.style.display = 'none';
+        }
+      },
+      lookout: {
+        title: "3. Lookout / MacOS-Use — Native Screen Vision Agent",
+        desc: "Sits as an ambient menu bar icon with zero permanent desktop UI. When instructed to do a task, it activates a high-speed ScreenCaptureKit visual reticle over your windows and controls mouse/keyboard automatically.",
+        link: "https://github.com/AnthonyDavidAdams/Lookout",
+        apply: () => {
+          scout.style.display = 'none';
+          hover.style.display = 'none';
+          cursor.style.display = 'none';
+          lookout.style.display = 'block';
+          stacky.style.display = 'none';
+        }
+      },
+      stacky: {
+        title: "4. Stacky AI — Fluid Breathing Droplet Globe",
+        desc: "Combines the best of both worlds: 100% borderless. The camera notch stays fixed, and only your pure colored glass globe seeps down like an organic droplet with living chromatic luminescence.",
+        link: "#",
+        apply: () => {
+          scout.style.display = 'none';
+          hover.style.display = 'none';
+          cursor.style.display = 'none';
+          lookout.style.display = 'none';
+          stacky.style.display = 'flex';
+        }
+      }
+    };
+
+    function showAssistant(name, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      cardTitle.textContent = data[name].title;
+      cardDesc.textContent = data[name].desc;
+      cardLink.href = data[name].link;
+      cardLink.style.display = name === 'stacky' ? 'none' : 'block';
+
+      data[name].apply();
+    }
+
+    // Default to scout
+    data.scout.apply();
+  </script>
+</body>
+</html>

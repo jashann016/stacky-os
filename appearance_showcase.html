@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — Screen Presence Design Concepts</title>
+  <style>
+    :root {
+      --bg: #03050c;
+      --cyan: #00f2fe;
+      --magenta: #ff0844;
+      --violet: #7928ca;
+      --surface: rgba(15, 23, 42, 0.75);
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #060913;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 60px 20px;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    /* CONCEPT SELECTOR TABS */
+    .tabs-bar {
+      display: flex;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 20;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .tab-btn.active {
+      background: rgba(0, 242, 254, 0.18);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: #00f2fe;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
+    }
+    .tab-num {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .tab-btn.active .tab-num {
+      background: #00f2fe;
+      color: #020617;
+    }
+
+    /* SIMULATED MAC DESKTOP SCREEN */
+    .mac-screen {
+      position: relative;
+      width: 920px;
+      height: 540px;
+      border-radius: 18px;
+      background: #0c101d url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 25px 65px rgba(0,0,0,0.8), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.4s ease;
+    }
+
+    /* macOS Menu Bar */
+    .macos-menubar {
+      height: 28px;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(25px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      z-index: 50;
+    }
+    .menubar-left, .menubar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .apple-logo {
+      font-size: 14px;
+    }
+
+    /* macOS Notch */
+    .macos-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 24px;
+      background: #000;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .notch-camera {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #111;
+      border: 1px solid #222;
+    }
+
+    /* macOS Dock */
+    .macos-dock {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 52px;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(30px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* Background windows to show real desktop usage */
+    .mock-window {
+      position: absolute;
+      width: 440px;
+      height: 280px;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(25px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      top: 90px;
+      left: 70px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+    .window-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-red { background: #ff5f56; }
+    .w-yel { background: #ffbd2e; }
+    .w-grn { background: #27c93f; }
+    .w-line { height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    /* ======================================================== */
+    /* CONCEPT 1: DYNAMIC ISLAND / NOTCH EXPANSION              */
+    /* ======================================================== */
+    .c-island {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 26px;
+      background: #000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .c-island.expanded {
+      width: 360px;
+      height: 76px;
+      border-radius: 26px;
+      top: 10px;
+      padding: 10px 20px;
+      justify-content: space-between;
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      box-shadow: 0 15px 45px rgba(0, 242, 254, 0.25), 0 20px 50px rgba(0,0,0,0.8);
+    }
+    .island-orb {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      object-fit: contain;
+      animation: fluidBreath 3s infinite ease-in-out alternate;
+      display: none;
+    }
+    .c-island.expanded .island-orb { display: block; }
+    .island-meta {
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .c-island.expanded .island-meta { display: flex; }
+    .island-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .island-subtitle { font-size: 11px; color: #00f2fe; }
+
+    /* ======================================================== */
+    /* CONCEPT 2: FLOATING AMBIENT DESKTOP ORB (DRAGGABLE/CORNER)*/
+    /* ======================================================== */
+    .c-corner-orb {
+      position: absolute;
+      bottom: 75px;
+      right: 35px;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7));
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .c-corner-orb:hover {
+      transform: scale(1.15);
+    }
+    .c-corner-orb .orb-pic {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 50%;
+      animation: fluidBreath 3.2s infinite ease-in-out alternate;
+    }
+    .c-corner-orb .orb-aura {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.5) 0%, rgba(121, 40, 202, 0.4) 50%, transparent 80%);
+      filter: blur(14px);
+      z-index: -1;
+      animation: auraBreath 3.2s infinite ease-in-out alternate;
+    }
+
+    /* ======================================================== */
+    /* CONCEPT 3: LIQUID EDGE LUMINESCENCE (SIRI BORDER GLOW)   */
+    /* ======================================================== */
+    .c-edge-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      pointer-events: none;
+      z-index: 80;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      box-shadow: 
+        inset 0 0 35px 8px rgba(0, 242, 254, 0.6),
+        inset 0 0 70px 20px rgba(121, 40, 202, 0.45),
+        inset 0 0 110px 35px rgba(255, 8, 68, 0.3);
+    }
+    .c-edge-glow.active {
+      opacity: 1;
+      animation: edgePulse 2.8s infinite ease-in-out alternate;
+    }
+    @keyframes edgePulse {
+      0% {
+        box-shadow: 
+          inset 0 0 30px 8px rgba(0, 242, 254, 0.5),
+          inset 0 0 60px 18px rgba(121, 40, 202, 0.4),
+          inset 0 0 90px 25px rgba(255, 8, 68, 0.25);
+      }
+      100% {
+        box-shadow: 
+          inset 0 0 45px 12px rgba(0, 242, 254, 0.8),
+          inset 0 0 85px 28px rgba(255, 8, 68, 0.6),
+          inset 0 0 130px 45px rgba(121, 40, 202, 0.5);
+      }
+    }
+
+    /* ======================================================== */
+    /* CONCEPT 4: SUBTLE MENU BAR STATUS ICON + COMPACT POPUP   */
+    /* ======================================================== */
+    .c-menubar-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: contain;
+      cursor: pointer;
+      filter: drop-shadow(0 0 6px #00f2fe);
+      animation: fluidBreath 3s infinite ease-in-out alternate;
+    }
+    .c-menubar-dropdown {
+      position: absolute;
+      top: 34px;
+      right: 40px;
+      width: 250px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(30px);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      z-index: 100;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .c-menubar-dropdown.open { display: flex; }
+    .dropdown-orb-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dropdown-orb-row img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    /* FLUID BREATH ANIMATIONS */
+    @keyframes fluidBreath {
+      0% { transform: scale(0.96) rotate(-2deg); filter: saturate(1.1); }
+      50% { transform: scale(1.06) rotate(2deg); filter: saturate(1.35) brightness(1.1); }
+      100% { transform: scale(0.98) rotate(0deg); filter: saturate(1.2); }
+    }
+    @keyframes auraBreath {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.3); opacity: 0.95; }
+      100% { transform: scale(1); opacity: 0.7; }
+    }
+
+    /* CONCEPT DETAILS BANNER */
+    .concept-card {
+      max-width: 920px;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 24px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .card-text h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #00f2fe;
+      margin-bottom: 4px;
+    }
+    .card-text p {
+      font-size: 13px;
+      color: #94a3b8;
+      max-width: 650px;
+    }
+    .action-badge {
+      background: rgba(0, 242, 254, 0.15);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #00f2fe;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Screen Presence Architecture</div>
+    <h1>How Should Stacky Appear On Your Screen?</h1>
+    <p>Click each concept below to preview how the Fluid Breathing Globe behaves on your macOS desktop.</p>
+  </header>
+
+  <!-- CONCEPT SWITCHER TABS -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="selectConcept(1, this)">
+      <span class="tab-num">1</span>
+      Dynamic Island (Notch Expansion)
+    </button>
+    <button class="tab-btn" onclick="selectConcept(2, this)">
+      <span class="tab-num">2</span>
+      Floating Ambient Desktop Orb
+    </button>
+    <button class="tab-btn" onclick="selectConcept(3, this)">
+      <span class="tab-num">3</span>
+      Screen Edge Luminescence
+    </button>
+    <button class="tab-btn" onclick="selectConcept(4, this)">
+      <span class="tab-num">4</span>
+      macOS Menu Bar Dropdown
+    </button>
+  </div>
+
+  <!-- SIMULATED MAC DISPLAY -->
+  <div class="mac-screen" id="macScreen">
+    
+    <!-- Edge Glow Layer (Concept 3) -->
+    <div class="c-edge-glow" id="edgeGlow"></div>
+
+    <!-- macOS Menu Bar -->
+    <div class="macos-menubar">
+      <div class="menubar-left">
+        <span class="apple-logo"></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+        <span>View</span>
+        <span>Go</span>
+        <span>Window</span>
+        <span>Help</span>
+      </div>
+      <div class="menubar-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 12:18 PM</span>
+        <!-- Menu Bar Stacky Icon (Concept 4) -->
+        <img src="assets/stacky_globe_improved.png" alt="Stacky Icon" class="c-menubar-icon" id="menuIcon" onclick="toggleMenuDropdown()" />
+      </div>
+    </div>
+
+    <!-- Concept 1: Dynamic Island at Camera Notch -->
+    <div class="c-island" id="islandBar" onclick="toggleIsland()">
+      <div class="notch-camera" id="notchCam"></div>
+      <img src="assets/stacky_globe_improved.png" alt="Stacky Globe" class="island-orb" />
+      <div class="island-meta">
+        <div class="island-title">Stacky AI • Active</div>
+        <div class="island-subtitle">Listening for your commands...</div>
+      </div>
+    </div>
+
+    <!-- Concept 4: Menu Bar Dropdown -->
+    <div class="c-menubar-dropdown" id="menuDropdown">
+      <div class="dropdown-orb-row">
+        <img src="assets/stacky_globe_improved.png" alt="Stacky Orb" />
+        <div>
+          <div style="font-size:13px; font-weight:700;">Stacky AI Core</div>
+          <div style="font-size:11px; color:#00f2fe;">Silent Background Mode</div>
+        </div>
+      </div>
+      <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:4px 0;" />
+      <div style="font-size:11px; color:#94a3b8;">✓ Inboxes Monitored (Email, WhatsApp)</div>
+      <div style="font-size:11px; color:#94a3b8;">✓ VIP Shield Active</div>
+    </div>
+
+    <!-- Background App Window (Simulated Visual Context) -->
+    <div class="mock-window">
+      <div class="window-header">
+        <div class="w-dot w-red"></div>
+        <div class="w-dot w-yel"></div>
+        <div class="w-dot w-grn"></div>
+      </div>
+      <div class="w-line" style="width: 70%;"></div>
+      <div class="w-line" style="width: 90%;"></div>
+      <div class="w-line" style="width: 50%;"></div>
+      <div class="w-line" style="width: 80%; margin-top: 20px;"></div>
+      <div class="w-line" style="width: 60%;"></div>
+    </div>
+
+    <!-- Concept 2: Floating Ambient Desktop Orb -->
+    <div class="c-corner-orb" id="cornerOrb" onclick="toggleCornerOrb()">
+      <div class="orb-aura"></div>
+      <img src="assets/stacky_globe_improved.png" alt="Stacky Globe" class="orb-pic" />
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="macos-dock">
+      <div class="dock-icon">📁</div>
+      <div class="dock-icon">🌐</div>
+      <div class="dock-icon">✉️</div>
+      <div class="dock-icon">💬</div>
+      <div class="dock-icon">⚙️</div>
+    </div>
+  </div>
+
+  <!-- CONCEPT DETAILS BANNER -->
+  <div class="concept-card">
+    <div class="card-text">
+      <h3 id="cardTitle">Concept 1: Dynamic Island (Notch Expansion)</h3>
+      <p id="cardDesc">Stacky sits invisible inside your Mac's camera notch. When summoned, it fluidly expands downward into a pill showing your breathing colored globe and listening wave.</p>
+    </div>
+    <div class="action-badge" id="cardAction" onclick="testCurrentConcept()">Test Interaction</div>
+  </div>
+
+  <script>
+    let activeConcept = 1;
+
+    const island = document.getElementById('islandBar');
+    const cornerOrb = document.getElementById('cornerOrb');
+    const edgeGlow = document.getElementById('edgeGlow');
+    const menuDropdown = document.getElementById('menuDropdown');
+    const notchCam = document.getElementById('notchCam');
+
+    const cardTitle = document.getElementById('cardTitle');
+    const cardDesc = document.getElementById('cardDesc');
+
+    const details = {
+      1: {
+        title: "Concept 1: Dynamic Island (Notch Expansion)",
+        desc: "Stacky lives hidden inside your MacBook's camera notch. When you invoke Stacky (voice or hotkey), the notch smoothly morphs into an elegant pill showing the Fluid Breathing globe.",
+        setup: () => {
+          island.style.display = 'flex';
+          island.classList.add('expanded');
+          notchCam.style.display = 'none';
+          cornerOrb.style.display = 'none';
+          edgeGlow.classList.remove('active');
+          menuDropdown.classList.remove('open');
+        }
+      },
+      2: {
+        title: "Concept 2: Floating Ambient Desktop Orb",
+        desc: "A compact, borderless, draggable fluid glass globe floating gently above your wallpaper or in the corner of your screen. Click or hover to interact.",
+        setup: () => {
+          island.classList.remove('expanded');
+          island.style.width = '140px';
+          notchCam.style.display = 'block';
+          cornerOrb.style.display = 'flex';
+          edgeGlow.classList.remove('active');
+          menuDropdown.classList.remove('open');
+        }
+      },
+      3: {
+        title: "Concept 3: Liquid Screen Edge Luminescence",
+        desc: "Authentic Apple Intelligence display perimeter aura: whenever Stacky listens to your voice or processes a command, the 4 borders of your entire screen gently illuminate with the fluid colored light.",
+        setup: () => {
+          island.classList.remove('expanded');
+          notchCam.style.display = 'block';
+          cornerOrb.style.display = 'none';
+          edgeGlow.classList.add('active');
+          menuDropdown.classList.remove('open');
+        }
+      },
+      4: {
+        title: "Concept 4: macOS Menu Bar Dropdown",
+        desc: "Resides unobtrusively right in the macOS top menu bar as a micro breathing globe icon. Clicking or speaking drops down a glass control pill.",
+        setup: () => {
+          island.classList.remove('expanded');
+          notchCam.style.display = 'block';
+          cornerOrb.style.display = 'none';
+          edgeGlow.classList.remove('active');
+          menuDropdown.classList.add('open');
+        }
+      }
+    };
+
+    function selectConcept(num, btn) {
+      activeConcept = num;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      cardTitle.textContent = details[num].title;
+      cardDesc.textContent = details[num].desc;
+
+      details[num].setup();
+    }
+
+    function toggleIsland() {
+      island.classList.toggle('expanded');
+      notchCam.style.display = island.classList.contains('expanded') ? 'none' : 'block';
+    }
+
+    function toggleCornerOrb() {
+      cornerOrb.style.transform = 'scale(1.35)';
+      setTimeout(() => { cornerOrb.style.transform = 'scale(1)'; }, 300);
+    }
+
+    function toggleMenuDropdown() {
+      menuDropdown.classList.toggle('open');
+    }
+
+    function testCurrentConcept() {
+      if (activeConcept === 1) toggleIsland();
+      else if (activeConcept === 2) toggleCornerOrb();
+      else if (activeConcept === 3) {
+        edgeGlow.classList.toggle('active');
+      } else if (activeConcept === 4) toggleMenuDropdown();
+    }
+
+    // Default concept 1 setup
+    details[1].setup();
+  </script>
+</body>
+</html>

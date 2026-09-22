@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stacky AI — 60FPS Silky Liquid Drop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #030408;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 40px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 10;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 242, 254, 0.12);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #00f2fe;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #00f2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    /* SCREEN FRAME */
+    .screen-frame {
+      position: relative;
+      width: 960px;
+      height: 560px;
+      border-radius: 22px;
+      background: #080d1a url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      overflow: hidden;
+    }
+
+    /* Menu Bar */
+    .menu-bar {
+      height: 32px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(25px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      position: relative;
+      z-index: 50;
+    }
+    .m-left, .m-right { display: flex; gap: 16px; align-items: center; }
+
+    /* HARDWARE NOTCH */
+    .hardware-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #282828;
+    }
+
+    /* CANVAS FOR SILKY 60FPS DETACHMENT PHYSICS */
+    canvas#liquidCanvas {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 280px;
+      z-index: 100;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* Mock desktop window */
+    .mock-window {
+      position: absolute;
+      top: 130px;
+      left: 70px;
+      width: 460px;
+      height: 300px;
+      background: rgba(13, 18, 30, 0.65);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    .w-dots { display: flex; gap: 6px; }
+    .w-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .w-r { background: #ff5f56; }
+    .w-y { background: #ffbd2e; }
+    .w-g { background: #27c93f; }
+    .mock-lines { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .m-line { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); }
+
+    /* macOS Dock */
+    .mac-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 54px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(35px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+    .dock-app {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+
+    /* CONTROL DOCK */
+    .control-dock {
+      margin-top: 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 10px 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+    .btn-replay {
+      background: rgba(0, 242, 254, 0.2);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #00f2fe;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-replay:hover {
+      background: rgba(0, 242, 254, 0.35);
+      transform: translateY(-2px);
+    }
+    .hint {
+      font-size: 12px;
+      color: #8fa0b5;
+    }
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Hardware-Accelerated 60FPS</div>
+    <h1>Silky Smooth Liquid Droplet Detachment</h1>
+  </header>
+
+  <!-- SCREEN FRAME -->
+  <div class="screen-frame">
+    
+    <div class="menu-bar">
+      <div class="m-left">
+        <span></span>
+        <span>Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="m-right">
+        <span>WiFi</span>
+        <span>100%</span>
+        <span>Thu 12:32 PM</span>
+      </div>
+    </div>
+
+    <!-- HARDWARE NOTCH -->
+    <div class="hardware-notch">
+      <div class="camera-lens"></div>
+    </div>
+
+    <!-- HIGH PERFORMANCE CANVAS -->
+    <canvas id="liquidCanvas" width="640" height="560"></canvas>
+
+    <!-- Mock Window -->
+    <div class="mock-window">
+      <div class="w-dots">
+        <div class="w-dot w-r"></div>
+        <div class="w-dot w-y"></div>
+        <div class="w-dot w-g"></div>
+      </div>
+      <div class="mock-lines">
+        <div class="m-line" style="width: 45%;"></div>
+        <div class="m-line" style="width: 75%;"></div>
+        <div class="m-line" style="width: 60%;"></div>
+        <div class="m-line" style="width: 85%;"></div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="mac-dock">
+      <div class="dock-app">📁</div>
+      <div class="dock-app">🌐</div>
+      <div class="dock-app">✉️</div>
+      <div class="dock-app">💬</div>
+      <div class="dock-app">⚙️</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="control-dock">
+    <button class="btn-replay" onclick="triggerDrop()">
+      Replay Smooth Liquid Drop (<kbd>Space</kbd>)
+    </button>
+    <div class="hint">Silky 60FPS direct Bezier physics: smooth viscous stretch, seamless neck detachment, zero lag.</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('liquidCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // High-res retina scale
+    const dpr = 2; // canvas is 640x560 displayed at 320x280
+    const cx = 320; // center X in canvas coords (corresponds to 160px screen center)
+    
+    // Load globe image
+    const globeImg = new Image();
+    globeImg.src = 'assets/stacky_globe_improved.png';
+
+    // Animation physics state
+    let animProgress = 0; // 0 to 1
+    let isDropping = false;
+    let animStartTime = 0;
+    const DURATION = 1800; // 1.8 seconds: silky, slow, luxurious
+
+    // Idle breathing time
+    let idleTime = 0;
+
+    // Cubic Bezier easing: viscous gravity curve
+    function easeViscous(t) {
+      // Slow start (high tension), accelerated stretch, buttery damped cushion
+      return t < 0.5 
+        ? 4 * t * t * t 
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function render(timestamp) {
+      if (!animStartTime) animStartTime = timestamp;
+      idleTime += 0.035;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (isDropping) {
+        const elapsed = timestamp - animStartTime;
+        animProgress = Math.min(1.0, elapsed / DURATION);
+        if (animProgress >= 1.0) {
+          isDropping = false;
+        }
+      }
+
+      // Physics calculation based on progress
+      const p = easeViscous(animProgress);
+
+      // Resting coordinates
+      const startY = 28 * dpr; // bottom of camera notch
+      const targetY = 145 * dpr; // final resting center of the globe
+      
+      // Interpolated Y center of the globe
+      const currentY = startY + (targetY - startY) * p;
+
+      // Base globe radius
+      const baseRadius = 42 * dpr;
+
+      // Organic stretch deformation
+      let scaleX = 1.0;
+      let scaleY = 1.0;
+      let opacity = 1.0;
+
+      // TENSION & STRETCH PHASE (p: 0 -> 0.6)
+      if (animProgress < 0.55) {
+        const stretchT = animProgress / 0.55;
+        // Vertically elongates, horizontally narrows
+        scaleY = 0.5 + stretchT * 0.95; // up to 1.45x
+        scaleX = 0.4 + stretchT * 0.35; // narrows to 0.75x
+        opacity = Math.min(1.0, animProgress * 3.5);
+      } 
+      // DETACHMENT & CUSHION PHASE (p: 0.55 -> 1.0)
+      else {
+        const cushionT = (animProgress - 0.55) / 0.45;
+        // Damped harmonic liquid wobble back to sphere (1.0, 1.0)
+        const wobble = Math.sin(cushionT * Math.PI * 2.5) * Math.exp(-cushionT * 3.2);
+        scaleX = 1.0 + wobble * 0.22;
+        scaleY = 1.0 - wobble * 0.25;
+        opacity = 1.0;
+      }
+
+      // 1. DRAW VISCOUS LIQUID NECK TETHER (Only before complete detachment at p < 0.55)
+      if (animProgress > 0.05 && animProgress < 0.58) {
+        const tetherProgress = (animProgress - 0.05) / 0.5; // 0 to 1
+        const neckAlpha = 1.0 - Math.pow(tetherProgress, 3); // fades cleanly at snap point
+        const neckWidth = Math.max(2 * dpr, (28 * (1 - tetherProgress * 0.85)) * dpr);
+
+        const notchAttachY = 26 * dpr;
+        const dropTopY = currentY - (baseRadius * scaleY * 0.85);
+
+        if (dropTopY > notchAttachY) {
+          ctx.save();
+          ctx.beginPath();
+          // Organic curved liquid bridge
+          ctx.moveTo(cx - 38 * dpr * (1 - tetherProgress * 0.7), notchAttachY);
+          ctx.bezierCurveTo(
+            cx - neckWidth * 0.6, (notchAttachY + dropTopY) * 0.45,
+            cx - baseRadius * scaleX * 0.7, dropTopY * 0.9,
+            cx, currentY
+          );
+          ctx.bezierCurveTo(
+            cx + baseRadius * scaleX * 0.7, dropTopY * 0.9,
+            cx + neckWidth * 0.6, (notchAttachY + dropTopY) * 0.45,
+            cx + 38 * dpr * (1 - tetherProgress * 0.7), notchAttachY
+          );
+          ctx.closePath();
+          ctx.fillStyle = `rgba(0, 0, 0, ${neckAlpha})`;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      // 2. DRAW LIVING CHROMATIC AURA AROUND GLOBE
+      if (opacity > 0.05) {
+        const auraBreath = Math.sin(idleTime * 2.5) * 6 * dpr;
+        const auraR = (baseRadius + 16 * dpr + auraBreath);
+        
+        ctx.save();
+        ctx.translate(cx, currentY);
+        ctx.scale(scaleX, scaleY);
+
+        const grad = ctx.createRadialGradient(0, 0, baseRadius * 0.8, 0, 0, auraR);
+        grad.addColorStop(0, 'rgba(0, 242, 254, 0.55)');
+        grad.addColorStop(0.45, 'rgba(121, 40, 202, 0.42)');
+        grad.addColorStop(0.75, 'rgba(255, 8, 68, 0.2)');
+        grad.addColorStop(1, 'transparent');
+
+        ctx.beginPath();
+        ctx.arc(0, 0, auraR, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.globalAlpha = opacity * 0.95;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 3. DRAW THE PURE COLORED GLASS GLOBE
+      if (opacity > 0.05 && globeImg.complete && globeImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.translate(cx, currentY);
+        ctx.scale(scaleX, scaleY);
+        ctx.globalAlpha = opacity;
+
+        // Idle micro breathing rotation when settled
+        if (animProgress >= 0.95) {
+          const rot = Math.sin(idleTime) * 0.035;
+          ctx.rotate(rot);
+        }
+
+        const size = baseRadius * 2;
+        // Deep ambient drop shadow under the globe
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+        ctx.shadowBlur = 30 * dpr;
+        ctx.shadowOffsetY = 15 * dpr;
+
+        ctx.drawImage(globeImg, -baseRadius, -baseRadius, size, size);
+        ctx.restore();
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    function triggerDrop() {
+      animProgress = 0;
+      animStartTime = performance.now();
+      isDropping = true;
+    }
+
+    globeImg.onload = () => {
+      triggerDrop();
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        triggerDrop();
+      }
+    });
+
+    canvas.addEventListener('click', triggerDrop);
+
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

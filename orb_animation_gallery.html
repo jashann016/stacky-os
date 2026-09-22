@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stacky Voice Animation Gallery</title>
+  <style>
+    :root {
+      --bg: #030712;
+      --cyan: #00f3ff;
+      --magenta: #ff007f;
+      --violet: #9d4edd;
+      --amber: #ffaa00;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 100vw;
+      min-height: 100vh;
+      background: #030712;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #00f3ff;
+      text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+      margin-bottom: 6px;
+    }
+    p {
+      color: #7b93a8;
+      font-size: 13px;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .card {
+      background: rgba(10, 20, 38, 0.6);
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #00f3ff;
+    }
+
+    .stage {
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #e0f7ff;
+      margin-bottom: 6px;
+    }
+    .desc {
+      font-size: 11px;
+      color: #69849b;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* ==================================================== */
+    /* STYLE 1: Apple Fluid Morphing Blob (Organic Living) */
+    /* ==================================================== */
+    .blob-core {
+      width: 130px;
+      height: 130px;
+      background: linear-gradient(45deg, #00f3ff, #ff007f, #9d4edd, #ffaa00);
+      background-size: 300% 300%;
+      border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+      animation: morphBlob 4s ease-in-out infinite, fluidShift 6s ease infinite;
+      box-shadow: 0 0 35px rgba(0, 243, 255, 0.6), 0 0 70px rgba(255, 0, 127, 0.4);
+      filter: blur(1px);
+    }
+    @keyframes morphBlob {
+      0%, 100% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; transform: rotate(0deg) scale(1); }
+      33% { border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%; transform: rotate(120deg) scale(1.08); }
+      66% { border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%; transform: rotate(240deg) scale(0.95); }
+    }
+    @keyframes fluidShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ==================================================== */
+    /* STYLE 2: Holographic Quantum Gyroscope (Stark Rings) */
+    /* ==================================================== */
+    .gyro-stage {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gyro-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid transparent;
+    }
+    .ring-1 {
+      width: 140px;
+      height: 140px;
+      border-top-color: #00f3ff;
+      border-bottom-color: #00f3ff;
+      box-shadow: 0 0 15px #00f3ff;
+      animation: spin1 4s linear infinite;
+    }
+    .ring-2 {
+      width: 110px;
+      height: 110px;
+      border-left-color: #ff007f;
+      border-right-color: #ff007f;
+      box-shadow: 0 0 15px #ff007f;
+      animation: spin2 3s linear infinite;
+    }
+    .ring-3 {
+      width: 80px;
+      height: 80px;
+      border-top-color: #ffaa00;
+      border-bottom-color: #ffaa00;
+      box-shadow: 0 0 15px #ffaa00;
+      animation: spin3 2s linear infinite;
+    }
+    .gyro-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 25px #00f3ff;
+      animation: dotPulse 1.2s infinite alternate;
+    }
+    @keyframes spin1 { to { transform: rotate(360deg); } }
+    @keyframes spin2 { to { transform: rotate(-360deg); } }
+    @keyframes spin3 { to { transform: rotate(360deg); } }
+    @keyframes dotPulse { from { transform: scale(0.9); } to { transform: scale(1.3); } }
+
+    /* ==================================================== */
+    /* STYLE 3: Soundwave Equalizer Vortex (Audio Pulse)   */
+    /* ==================================================== */
+    .vortex-stage {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .vortex-wave {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid #00f3ff;
+      box-shadow: 0 0 15px #00f3ff, inset 0 0 15px #9d4edd;
+      animation: vortexExpand 2.2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+    }
+    .vortex-wave:nth-child(2) { animation-delay: 0.5s; border-color: #ff007f; box-shadow: 0 0 15px #ff007f; }
+    .vortex-wave:nth-child(3) { animation-delay: 1.1s; border-color: #ffaa00; box-shadow: 0 0 15px #ffaa00; }
+    .vortex-wave:nth-child(4) { animation-delay: 1.6s; border-color: #00f3ff; box-shadow: 0 0 15px #00f3ff; }
+    .vortex-core {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 0%, #00f3ff 50%, #9d4edd 100%);
+      box-shadow: 0 0 20px #00f3ff;
+      z-index: 2;
+    }
+    @keyframes vortexExpand {
+      0% { width: 30px; height: 30px; opacity: 1; transform: scale(0.6); }
+      100% { width: 170px; height: 170px; opacity: 0; transform: scale(1.25); }
+    }
+
+    /* ==================================================== */
+    /* STYLE 4: Multi-Layer Neon Halo Nebula (Pure Aura)   */
+    /* ==================================================== */
+    .nebula-stage {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nebula-layer {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      mix-blend-mode: screen;
+      filter: blur(12px);
+    }
+    .neb-1 { background: radial-gradient(circle, #00f3ff 0%, transparent 70%); animation: nebMove1 3s ease-in-out infinite alternate; }
+    .neb-2 { background: radial-gradient(circle, #ff007f 0%, transparent 70%); animation: nebMove2 4s ease-in-out infinite alternate; }
+    .neb-3 { background: radial-gradient(circle, #ffaa00 0%, transparent 70%); animation: nebMove3 3.5s ease-in-out infinite alternate; }
+    .neb-core {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(0, 243, 255, 0.5);
+      z-index: 2;
+    }
+    @keyframes nebMove1 { from { transform: translate(-15px, -15px) scale(0.9); } to { transform: translate(15px, 15px) scale(1.2); } }
+    @keyframes nebMove2 { from { transform: translate(15px, -15px) scale(1.2); } to { transform: translate(-15px, 15px) scale(0.9); } }
+    @keyframes nebMove3 { from { transform: translate(-10px, 15px) scale(1); } to { transform: translate(10px, -15px) scale(1.15); } }
+  </style>
+</head>
+<body>
+
+  <h1>STACKY AI // VOICE ANIMATION LAB</h1>
+  <p>Select your favorite living motion style for the voice listening state</p>
+
+  <div class="grid">
+    <!-- Option 1 -->
+    <div class="card">
+      <div class="stage">
+        <div class="blob-core"></div>
+      </div>
+      <div class="title">1. FLUID MORPHING BLOB</div>
+      <div class="desc">Organic, liquid Apple-style shape-shifting aura. Gently flows and shifts continuously with smooth pastel gradients.</div>
+    </div>
+
+    <!-- Option 2 -->
+    <div class="card">
+      <div class="stage">
+        <div class="gyro-stage">
+          <div class="gyro-ring ring-1"></div>
+          <div class="gyro-ring ring-2"></div>
+          <div class="gyro-ring ring-3"></div>
+          <div class="gyro-dot"></div>
+        </div>
+      </div>
+      <div class="title">2. QUANTUM GYROSCOPE</div>
+      <div class="desc">Futuristic Iron Man Arc Reactor rings rotating counter-directionally around an ultra-bright pulsing white core.</div>
+    </div>
+
+    <!-- Option 3 -->
+    <div class="card">
+      <div class="stage">
+        <div class="vortex-stage">
+          <div class="vortex-wave"></div>
+          <div class="vortex-wave"></div>
+          <div class="vortex-wave"></div>
+          <div class="vortex-wave"></div>
+          <div class="vortex-core"></div>
+        </div>
+      </div>
+      <div class="title">3. SONIC EQUALIZER VORTEX</div>
+      <div class="desc">Multi-frequency ultrasonic soundwaves continuously radiating outward in response to microphone listening audio.</div>
+    </div>
+
+    <!-- Option 4 -->
+    <div class="card">
+      <div class="stage">
+        <div class="nebula-stage">
+          <div class="nebula-layer neb-1"></div>
+          <div class="nebula-layer neb-2"></div>
+          <div class="nebula-layer neb-3"></div>
+          <div class="neb-core"></div>
+        </div>
+      </div>
+      <div class="title">4. FROSTED NEBULA AURA</div>
+      <div class="desc">A crystal frosted glass sphere suspended inside living, multi-layered color clouds that dance organically behind it.</div>
+    </div>
+  </div>
+
+</body>
+</html>
