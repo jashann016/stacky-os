@@ -78,7 +78,7 @@ class TelegramLongPoller:
                     logger.info(f"[Remote Phone Command Received]: '{text}'")
 
                     # 1. Check if it's a file, screenshot, or hardware command
-                    if any(k in text.lower() for k in ["send me", "fetch", "screenshot", "lock"]):
+                    if any(k in text.lower() for k in ["send me", "fetch", "screenshot", "screen shot", "snapshot", "ss", "screencap", "lock", "sleep"]):
                         reply = telegram_bridge.handle_remote_command(text)
                         telegram_bridge.send_text_message(reply)
                     else:

@@ -214,12 +214,15 @@ class TelegramRemoteBridge:
         cmd = user_command.lower().strip()
 
         # 1. Remote Screen Snapshot
-        if "screenshot" in cmd or "screen snapshot" in cmd:
-            self.send_screenshot_to_phone()
-            return "Live Mac desktop screenshot captured and dispatched to your phone, Sir."
+        if any(w in cmd for w in ["screenshot", "screen shot", "snapshot", "screen snap", "ss", "screencap"]):
+            res = self.send_screenshot_to_phone()
+            if res.get("status") == "DISPATCHED":
+                return "Live Mac desktop screenshot captured and dispatched to your phone, Sir."
+            else:
+                return f"Unable to capture screen: {res.get('error', 'unknown error')}"
 
         # 2. Remote Lock / Sleep
-        if "lock" in cmd:
+        if any(w in cmd for w in ["lock", "sleep", "lock mac", "sleep mac"]):
             subprocess.run(["pmset", "displaysleepnow"], check=False)
             return "Workstation locked and display put to sleep, Sir."
 

@@ -33,12 +33,19 @@
 @property (assign) BOOL isAudioCapturing;
 @property (strong) AVSpeechSynthesizer *speechSynth;
 
+@property (assign) NSInteger lastTelegramUpdateId;
+@property (strong) NSString *telegramToken;
+@property (strong) NSString *telegramUserId;
+
 - (void)showAndWake;
 - (void)hideAndSleep;
 - (void)toggle;
 - (void)startAudioCapture;
 - (void)stopAudioCapture;
 - (void)sendSpokenCommandToStacky:(NSString *)spokenText;
+- (void)startTelegramPolling;
+- (void)handleTelegramRemoteCommand:(NSString *)command chatId:(NSString *)chatId;
+- (void)sendTelegramMessage:(NSString *)text chatId:(NSString *)chatId;
 @end
 
 @implementation AppDelegate
@@ -186,6 +193,12 @@
             });
         }
     });
+
+    // Start Native Telegram Remote Bridge for hardware control (Lock, Screenshot, File fetch)
+    self.telegramToken = @"8628400649:AAHOWPcVF5FfXsNhInVSXPzSsiQ9TGZR82M";
+    self.telegramUserId = @"5714321696";
+    self.lastTelegramUpdateId = 0;
+    [self startTelegramPolling];
 }
 
 #pragma mark - WebKit Script Message Handler (Capsule Clicks)
@@ -487,6 +500,123 @@
         }
     }];
     [task resume];
+}
+
+#pragma mark - Native Telegram Remote Bridge & Hardware Execution
+- (void)startTelegramPolling {
+    if (!self.telegramToken.length) return;
+
+    NSString *urlString = [NSString stringWithFormat:@"https://api.telegram.org/bot%@/getUpdates?offset=%ld&timeout=25", self.telegramToken, (long)(self.lastTelegramUpdateId + 1)];
+    NSURL *url = [NSURL URLWithString:urlString];
+    NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+    config.timeoutIntervalForRequest = 35.0;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:config];
+
+    __weak typeof(self) weakSelf = self;
+    NSURLSessionDataTask *task = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if (data) {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            if ([json[@"ok"] boolValue]) {
+                NSArray *results = json[@"result"];
+                for (NSDictionary *update in results) {
+                    NSInteger updateId = [update[@"update_id"] integerValue];
+                    if (updateId > weakSelf.lastTelegramUpdateId) {
+                        weakSelf.lastTelegramUpdateId = updateId;
+                    }
+                    NSDictionary *msg = update[@"message"] ?: update[@"edited_message"];
+                    if (!msg) continue;
+
+                    NSString *senderId = [NSString stringWithFormat:@"%@", msg[@"from"][@"id"] ?: @""];
+                    NSString *text = msg[@"text"] ?: @"";
+
+                    // Security verification: only authorized user
+                    if (weakSelf.telegramUserId.length && ![senderId isEqualToString:weakSelf.telegramUserId]) {
+                        NSLog(@"[Security] Rejecting unauthorized Telegram sender: %@", senderId);
+                        continue;
+                    }
+                    if (!text.length) continue;
+
+                    [weakSelf handleTelegramRemoteCommand:text chatId:senderId];
+                }
+            }
+        }
+        // Continue long-polling loop with minimal delay
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [weakSelf startTelegramPolling];
+        });
+    }];
+    [task resume];
+}
+
+- (void)handleTelegramRemoteCommand:(NSString *)command chatId:(NSString *)chatId {
+    NSString *cmd = command.lowercaseString;
+    NSLog(@"[Telegram Remote Command]: %@", command);
+
+    // 1. Screenshot / Screen snapshot / ss
+    if ([cmd containsString:@"screenshot"] || [cmd containsString:@"screen shot"] || [cmd containsString:@"snapshot"] || [cmd containsString:@"ss"] || [cmd containsString:@"screencap"]) {
+        NSString *snapPath = @"/tmp/stacky_screen_snap.png";
+        NSTask *task = [[NSTask alloc] init];
+        task.launchPath = @"/usr/sbin/screencapture";
+        task.arguments = @[@"-x", snapPath];
+        [task launch];
+        [task waitUntilExit];
+
+        // Upload snapshot photo directly to user's Telegram
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            NSTask *curlTask = [[NSTask alloc] init];
+            curlTask.launchPath = @"/usr/bin/curl";
+            curlTask.arguments = @[
+                @"-s", @"-X", @"POST",
+                [NSString stringWithFormat:@"https://api.telegram.org/bot%@/sendPhoto", self.telegramToken],
+                @"-F", [NSString stringWithFormat:@"chat_id=%@", chatId],
+                @"-F", [NSString stringWithFormat:@"photo=@%@", snapPath],
+                @"-F", @"caption=Live snapshot of your Mac desktop, Sir."
+            ];
+            [curlTask launch];
+            [curlTask waitUntilExit];
+        });
+        return;
+    }
+
+    // 2. Lock / Sleep Mac
+    if ([cmd containsString:@"lock"] || [cmd containsString:@"sleep"]) {
+        NSTask *task = [[NSTask alloc] init];
+        task.launchPath = @"/usr/bin/pmset";
+        task.arguments = @[@"displaysleepnow"];
+        [task launch];
+
+        [self sendTelegramMessage:@"Workstation locked and display put to sleep, Sir." chatId:chatId];
+        return;
+    }
+
+    // 3. General AI Question / Research Query (Forwarded to Render Backend)
+    NSURL *url = [NSURL URLWithString:@"https://stacky-os.onrender.com/api/chat"];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    req.HTTPMethod = @"POST";
+    [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [req setValue:@"923352" forHTTPHeaderField:@"X-Stacky-Key"];
+    NSDictionary *body = @{@"message": command};
+    req.HTTPBody = [NSJSONSerialization dataWithJSONObject:body options:0 error:nil];
+
+    [[[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (data) {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            NSString *reply = json[@"reply"] ?: @"Command processed, Sir.";
+            [self sendTelegramMessage:reply chatId:chatId];
+        }
+    }] resume];
+}
+
+- (void)sendTelegramMessage:(NSString *)text chatId:(NSString *)chatId {
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://api.telegram.org/bot%@/sendMessage", self.telegramToken]];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    req.HTTPMethod = @"POST";
+    [req setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+    NSString *bodyStr = [NSString stringWithFormat:@"chat_id=%@&text=%@",
+                         [chatId stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]],
+                         [text stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]]];
+    req.HTTPBody = [bodyStr dataUsingEncoding:NSUTF8StringEncoding];
+    [[[NSURLSession sharedSession] dataTaskWithRequest:req] resume];
 }
 
 @end

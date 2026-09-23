@@ -1,16 +1,22 @@
 #!/bin/bash
 set -e
 
-PLIST_FILE="$HOME/Library/LaunchAgents/com.stacky.notchbar.plist"
+PLIST_NOTCH="$HOME/Library/LaunchAgents/com.stacky.notchbar.plist"
+PLIST_TG="$HOME/Library/LaunchAgents/com.stacky.telegram.plist"
 
-if [ -f "$PLIST_FILE" ]; then
-    launchctl unload "$PLIST_FILE" 2>/dev/null || true
-    rm -f "$PLIST_FILE"
-    echo "[+] Stacky Notch Bar LaunchAgent daemon uninstalled successfully."
-else
-    echo "[!] No daemon plist found at $PLIST_FILE."
+if [ -f "$PLIST_NOTCH" ]; then
+    launchctl unload "$PLIST_NOTCH" 2>/dev/null || true
+    rm -f "$PLIST_NOTCH"
+    echo "[+] Stacky Notch Bar daemon uninstalled."
 fi
 
-# Kill any running notch bar instances
+if [ -f "$PLIST_TG" ]; then
+    launchctl unload "$PLIST_TG" 2>/dev/null || true
+    rm -f "$PLIST_TG"
+    echo "[+] Stacky Telegram Bridge daemon uninstalled."
+fi
+
+# Kill any running Stacky background instances
 killall stacky_notch_bar 2>/dev/null || true
-echo "[+] Process stopped."
+pkill -f "launch_telegram_bridge.py" 2>/dev/null || true
+echo "[+] All Stacky background services stopped cleanly."
