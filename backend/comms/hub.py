@@ -69,20 +69,12 @@ class CommunicationsHub:
                 "suggested_reply": eval_result.get("suggested_reply", "")
             }
 
-            if eval_result.get("action") == "AUTO_REPLY":
-                # Autonomous auto-reply
-                if msg["platform"] == "Email":
-                    self.email_engine.send_reply(msg["sender"], msg.get("subject", "Re: inquiry"), eval_result["suggested_reply"])
-                else:
-                    self.social_engine.send_social_reply(msg["platform"], msg["sender"], eval_result["suggested_reply"])
-                
-                new_auto_replied.append(summary_entry)
-            else:
-                # Hold for Tony Stark's review
-                new_held.append(summary_entry)
+            # STRICT USER-CONTROL GUARDRAIL: Never perform autonomous outbound actions or replies.
+            # Actions are strictly executed only when Jashan explicitly commands "do this".
+            summary_entry["action"] = "HOLD_FOR_USER"
+            new_held.append(summary_entry)
 
-        self.auto_replied_history.extend(new_auto_replied)
-        self.held_for_review = new_held  # Update pending reviews
+        self.held_for_review = new_held
 
         return {
             "auto_replied": new_auto_replied,

@@ -38,7 +38,8 @@ class EmailEngine:
 
             msg_ids = messages[0].split()[-limit:]
             for msg_id in reversed(msg_ids):
-                status, msg_data = mail.fetch(msg_id, "(RFC822)")
+                # Use BODY.PEEK[] so reading emails does NOT mark them as read in user's Gmail
+                status, msg_data = mail.fetch(msg_id, "(BODY.PEEK[])")
                 for response_part in msg_data:
                     if isinstance(response_part, tuple):
                         msg = email.message_from_bytes(response_part[1])
