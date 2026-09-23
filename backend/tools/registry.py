@@ -58,6 +58,22 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "check_user_emails",
+            "description": "Fetch, inspect, and summarize the user's latest unread Gmail emails with smart category breakdown (Education & Internships, Jobs & Careers, Professional Network, Finance, System Alerts).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer",
+                        "description": "Number of unread emails to retrieve (default: 5)."
+                    }
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "trigger_phone_call_briefing",
             "description": "Make an outbound phone call to the user to deliver a voice briefing on handled messages and pending approvals.",
             "parameters": {
@@ -289,6 +305,9 @@ async def dispatch_tool_call(tool_name: str, args: Dict[str, Any]) -> Any:
     """Master tool dispatcher."""
     if tool_name == "scan_inboxes_and_comms":
         return await comms_hub.scan_and_process_all_inboxes()
+    elif tool_name == "check_user_emails":
+        limit = args.get("limit", 5)
+        return comms_hub.email_engine.fetch_and_summarize_emails(limit=limit)
     elif tool_name == "trigger_phone_call_briefing":
         return await comms_hub.execute_phone_briefing(args.get("phone_number"))
     elif tool_name == "conduct_ghost_research":

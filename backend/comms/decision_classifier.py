@@ -3,7 +3,7 @@ import re
 import logging
 from typing import Dict, Any
 from openai import AsyncOpenAI
-from backend.config import OPENROUTER_API_KEY, OPENAI_API_KEY, DEFAULT_MODEL
+from backend.config import GROQ_API_KEY, OPENROUTER_API_KEY, OPENAI_API_KEY, DEFAULT_MODEL
 
 logger = logging.getLogger("DecisionClassifier")
 
@@ -29,7 +29,10 @@ Your task is to analyze incoming messages (Email, WhatsApp, or Instagram DM) and
 
 class MessageClassifier:
     def __init__(self):
-        if OPENROUTER_API_KEY:
+        if GROQ_API_KEY:
+            self.client = AsyncOpenAI(base_url="https://api.groq.com/openai/v1", api_key=GROQ_API_KEY)
+            self.model = "llama-3.3-70b-versatile"
+        elif OPENROUTER_API_KEY:
             self.client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=OPENROUTER_API_KEY)
             self.model = DEFAULT_MODEL
         elif OPENAI_API_KEY:

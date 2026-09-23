@@ -5,6 +5,7 @@ from email.header import decode_header
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import re
 import logging
 from typing import List, Dict, Any
 
@@ -80,11 +81,61 @@ class EmailEngine:
 
         return emails_data
 
+    def categorize_email(self, sender: str, subject: str, body: str) -> str:
+        """Categorize incoming email into intuitive groups."""
+        text = f"{sender} {subject} {body}".lower()
+        if any(w in text for w in ["assignment", "professor", "university", "college", "exam", "internshala", "course", "lecture"]):
+            return "🎓 Education & Internships"
+        elif any(w in text for w in ["job", "recruiter", "interview", "application", "glassdoor", "hiring", "vacancy", "career"]):
+            return "💼 Jobs & Careers"
+        elif any(w in text for w in ["invitation", "network", "connect", "linkedin"]):
+            return "🤝 Professional Network"
+        elif any(w in text for w in ["invoice", "receipt", "payment", "bank", "otp", "statement", "debit", "credit"]):
+            return "💳 Finance & Billing"
+        elif any(w in text for w in ["security alert", "delivery status", "failure", "alert", "password", "verification"]):
+            return "🔔 System & Security Alerts"
+        else:
+            return "📢 General / Updates"
+
+    def fetch_and_summarize_emails(self, limit: int = 5) -> Dict[str, Any]:
+        """Fetch latest unread emails and return an organized briefing."""
+        raw_emails = self.fetch_unread_emails(limit=limit)
+        if not raw_emails:
+            return {
+                "count": 0,
+                "summary": "Your inbox is completely clear, Sir. No unread emails found.",
+                "emails": []
+            }
+
+        categorized_emails = []
+        for em in raw_emails:
+            category = self.categorize_email(em["sender"], em["subject"], em.get("body", ""))
+            clean_body = re.sub(r'\s+', ' ', em.get("body", "")).strip()[:140]
+            categorized_emails.append({
+                "id": em["id"],
+                "sender": em["sender"],
+                "subject": em["subject"],
+                "category": category,
+                "preview": clean_body
+            })
+
+        return {
+            "count": len(categorized_emails),
+            "summary": f"Found {len(categorized_emails)} unread emails in your Gmail inbox.",
+            "emails": categorized_emails
+        }
+
     def send_reply(self, to_email: str, subject: str, reply_text: str) -> bool:
-        """Send email reply via SMTP."""
+        """Send email reply via SMTP with automated safeguards."""
         if not self.is_configured:
             logger.info(f"[SIMULATED EMAIL SENT] To: {to_email} | Subject: Re: {subject} | Content: {reply_text}")
             return True
+
+        # Safety Guard: Never auto-reply to robotic/no-reply/system addresses
+        low_target = to_email.lower()
+        if any(bot in low_target for bot in ["no-reply", "noreply", "donotreply", "mailer-daemon", "newsletters", "invitations", "student@mail"]):
+            logger.info(f"Auto-reply blocked for automated address: {to_email}")
+            return False
 
         try:
             msg = MIMEMultipart()

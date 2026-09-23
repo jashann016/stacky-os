@@ -52,8 +52,20 @@ class StackyAgent:
             content = res[0].get("content", "No record found.")
             return {"reply": f"Retrieved from episodic memory archives, Sir: {content}", "tools_used": tools_executed}
 
-        # 2. Comms & Phone Briefing
-        if any(w in inp for w in ["scan", "inbox", "email", "whatsapp", "instagram"]):
+        # 2. Email & Comms Inspection
+        if any(w in inp for w in ["check email", "check my email", "unread email", "gmail", "my emails", "emails", "mail"]):
+            res = await dispatch_tool_call("check_user_emails", {"limit": 5})
+            tools_executed.append({"name": "check_user_emails", "args": {"limit": 5}, "result": res})
+            emails = res.get("emails", [])
+            if not emails:
+                return {"reply": "Your inbox is completely clear, Sir. No unread emails found.", "tools_used": tools_executed}
+            
+            lines = [f"Found {len(emails)} unread emails in your inbox, Sir:\n"]
+            for idx, em in enumerate(emails, 1):
+                lines.append(f"{idx}. [{em['category']}] **{em['sender']}**: *{em['subject']}*")
+            return {"reply": "\n".join(lines), "tools_used": tools_executed}
+
+        if any(w in inp for w in ["scan", "inbox", "whatsapp", "instagram"]):
             res = await dispatch_tool_call("scan_inboxes_and_comms", {})
             tools_executed.append({"name": "scan_inboxes_and_comms", "args": {}, "result": res})
             reply = f"Communications channels scanned, Sir. Handled {len(res.get('auto_replied', []))} routine items, and flagged {len(res.get('held_for_review', []))} for your personal authorization."
